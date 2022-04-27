@@ -1,0 +1,68 @@
+The inerface between C and ASM are defined as the following:
+
+
+C:
+result	FunctionName( param1, param2, param3)
+
+ASM:
+	move.l	param3,-(a7)
+	move.l	param2,-(a7)
+	move.l	param1,-(a7)
+	bsr	_FunctionName
+	move.l	d0,memory
+	add.w	#12,a7
+
+
+-- Real Example --
+C:
+	result = memchr(string1, 'e', 14);
+
+ASM:
+	section	"CODE",code
+	move.l	#14,-(a7)
+	move.l	#'e',-(a7)
+	pea	_string1
+	jsr	_memchr
+	move.l	d0,result
+	add.w	#12,a7
+
+	section	"DATA",data
+_string1:
+	dc.b	"This is a test",0
+	even
+
+
+So from this example, this is the rule when C functions calls look like in ASM
+
+	push parameters as longs -or-
+	push the address to parameters
+
+	push parameters from right to left
+
+	return values d0 as long / int
+
+	add.w or addq.w	remove parameters
+
+	if the number of bytes is 8 or less then addq.w is used
+	else add.w
+
+
+Here are more rules:
+	if a method returns void, it still sets d0 to 0 by moveq #0,d0
+
+	d0: 32-bit return value
+	d0 - d1, a0 - a1: are defined as scratch registers
+	d2 - d7, a2 - a7: must be saved when calling methods use them
+	a5 is the frame pointer
+	a7 is the stack pointer
+
+	when writing a leaf method (does not call anouther function)
+	you can use all registers and be safe.
+	if writing a branch method (does call other functions), please
+	start using d2 - d7 first, as calling methods can destroy the contents
+	of d0,d1,a0,a1 without warning. So if you need to save values you cant
+	trash, please save them in other registers or memory
+
+
+
+
