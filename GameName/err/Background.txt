@@ -1,0 +1,471 @@
+F00:0001       	idnt	"src/Background.c"
+F00:0002       	opt o+,ol+,op+,oc+,ot+,oj+,ob+,om+
+F00:0003       	section	"CODE",code
+F00:0004       	public	_LoadBackground
+F00:0005       	cnop	0,4
+F00:0006       _LoadBackground
+F00:0007       	link.w	a5,#0
+               S01:00000000:  4E 55 00 00
+F00:0008       	movem.l	l14,-(a7)
+               S01:00000004:  48 E7 3E 30
+F00:0009       	moveq	#2,d6
+               S01:00000008:  7C 02
+F00:0010       	move.w	#128,d5
+               S01:0000000A:  3A 3C 00 80
+F00:0011       	move.l	#1073741824,d4
+               S01:0000000E:  28 3C 40 00 00 00
+F00:0012       	move.l	d6,-(a7)
+               S01:00000014:  2F 06
+F00:0013       	jsr	_VDP_Disable
+               S01:00000016:  4E B9 00 00 00 00 [R]
+F00:0014       	jsr	_WaitForVblank
+               S01:0000001C:  4E B9 00 00 00 00 [R]
+F00:0015       	jsr	_disableCPUInterrupts
+               S01:00000022:  4E B9 00 00 00 00 [R]
+F00:0016       	pea	l3
+               S01:00000028:  48 7A 01 36
+F00:0017       	jsr	_fopen
+               S01:0000002C:  4E B9 00 00 00 00 [R]
+F00:0018       	move.l	d0,a2
+               S01:00000032:  24 40
+F00:0019       	move.l	(4,a2),a0
+               S01:00000034:  20 6A 00 04
+F00:0020       	move.l	a0,-(a7)
+               S01:00000038:  2F 08
+F00:0021       	move.l	(a2),-(a7)
+               S01:0000003A:  2F 12
+F00:0022       	pea	32+_colorBuffer
+               S01:0000003C:  48 79 00 00 00 20 [R]
+F00:0023       	jsr	_memcpy
+               S01:00000042:  4E B9 00 00 00 00 [R]
+F00:0024       	move.l	d0,a1
+               S01:00000048:  22 40
+F00:0025       	jsr	_VDP_CommitColorBuffer
+               S01:0000004A:  4E B9 00 00 00 00 [R]
+F00:0026       	move.l	a2,-(a7)
+               S01:00000050:  2F 0A
+F00:0027       	jsr	_fclose
+               S01:00000052:  4E B9 00 00 00 00 [R]
+F00:0028       	pea	l4
+               S01:00000058:  48 7A 01 26
+F00:0029       	jsr	_fopen
+               S01:0000005C:  4E B9 00 00 00 00 [R]
+F00:0030       	move.l	d0,a2
+               S01:00000062:  24 40
+F00:0031       	move.l	(4,a2),d0
+               S01:00000064:  20 2A 00 04
+F00:0032       	bge	l17
+               S01:00000068:  6C 06
+F00:0033       	add.l	#31,d0
+               S01:0000006A:  D0 BC 00 00 00 1F
+F00:0034       l17:
+F00:0035       	asr.l	#5,d0
+               S01:00000070:  EA 80
+F00:0036       	move.l	d0,-(a7)
+               S01:00000072:  2F 00
+F00:0037       	jsr	_VDP_AllocVram
+               S01:00000074:  4E B9 00 00 00 00 [R]
+F00:0038       	move.l	d0,a3
+               S01:0000007A:  26 40
+F00:0039       	move.l	d6,-(a7)
+               S01:0000007C:  2F 06
+F00:0040       	move.l	(a2),-(a7)
+               S01:0000007E:  2F 12
+F00:0041       	move.l	(4,a2),-(a7)
+               S01:00000080:  2F 2A 00 04
+F00:0042       	moveq	#0,d0
+               S01:00000084:  70 00
+F00:0043       	move.w	(0,a3,d6.l),d0
+               S01:00000086:  30 33 68 00
+F00:0044       	move.l	d0,a0
+               S01:0000008A:  20 40
+F00:0045       	move.l	a0,-(a7)
+               S01:0000008C:  2F 08
+F00:0046       	jsr	_DMA_MemoryToVram
+               S01:0000008E:  4E B9 00 00 00 00 [R]
+F00:0047       	move.l	a2,-(a7)
+               S01:00000094:  2F 0A
+F00:0048       	jsr	_fclose
+               S01:00000096:  4E B9 00 00 00 00 [R]
+F00:0049       	pea	l5
+               S01:0000009C:  48 7A 01 02
+F00:0050       	jsr	_fopen
+               S01:000000A0:  4E B9 00 00 00 00 [R]
+F00:0051       	move.l	d0,a2
+               S01:000000A6:  24 40
+F00:0052       	move.w	#57216,d3
+               S01:000000A8:  36 3C DF 80
+F00:0053       	moveq	#0,d2
+               S01:000000AC:  74 00
+F00:0054       	add.w	#56,a7
+               S01:000000AE:  4F EF 00 38
+F00:0055       	cmp.l	(4,a2),d2
+               S01:000000B2:  B4 AA 00 04
+F00:0056       	bge	l13
+               S01:000000B6:  6C 00 00 86
+F00:0057       l12
+F00:0058       	move.l	a1,-(a7)
+               S01:000000BA:  2F 09
+F00:0059       	move.l	#64,-(a7)
+               S01:000000BC:  48 78 00 40
+F00:0060       	move.l	d2,-(a7)
+               S01:000000C0:  2F 02
+F00:0061       	public	__lmods
+F00:0062       	jsr	__lmods
+               S01:000000C2:  4E B9 00 00 00 00 [R]
+F00:0063       	addq.w	#8,a7
+               S01:000000C8:  50 4F
+F00:0064       	move.l	(a7)+,a1
+               S01:000000CA:  22 5F
+F00:0065       	tst.l	d0
+               S01:000000CC:  4A 80
+F00:0066       	bne	l11
+               S01:000000CE:  66 1A
+F00:0067       	add.w	d5,d3
+               S01:000000D0:  D6 45
+F00:0068       	move.l	d4,-(a7)
+               S01:000000D2:  2F 04
+F00:0069       	moveq	#0,d0
+               S01:000000D4:  70 00
+F00:0070       	move.w	d3,d0
+               S01:000000D6:  30 03
+F00:0071       	move.l	d0,a0
+               S01:000000D8:  20 40
+F00:0072       	move.l	a0,-(a7)
+               S01:000000DA:  2F 08
+F00:0073       	jsr	_VDP_WriteCommand
+               S01:000000DC:  4E B9 00 00 00 00 [R]
+F00:0074       	move.l	d0,12582916
+               S01:000000E2:  23 C0 00 C0 00 04
+F00:0075       	addq.w	#8,a7
+               S01:000000E8:  50 4F
+F00:0076       l11
+F00:0077       	move.l	(a2),a0
+               S01:000000EA:  20 52
+F00:0078       	moveq	#0,d0
+               S01:000000EC:  70 00
+F00:0079       	move.b	(-1,a0,d2.l),d0
+               S01:000000EE:  10 30 28 FF
+F00:0080       	and.l	#65535,d0
+               S01:000000F2:  C0 BC 00 00 FF FF
+F00:0081       	lsl.l	#8,d0
+               S01:000000F8:  E1 88
+F00:0082       	move.l	(a2),a0
+               S01:000000FA:  20 52
+F00:0083       	moveq	#0,d1
+               S01:000000FC:  72 00
+F00:0084       	move.b	(0,a0,d2.l),d1
+               S01:000000FE:  12 30 28 00
+F00:0085       	or.w	d0,d1
+               S01:00000102:  82 40
+F00:0086       	lea	(a3,d6.l),a0
+               S01:00000104:  41 F3 68 00
+F00:0087       	move.w	(a0),d0
+               S01:00000108:  30 10
+F00:0088       	and.l	#65535,d0
+               S01:0000010A:  C0 BC 00 00 FF FF
+F00:0089       	tst.l	d0
+               S01:00000110:  4A 80
+F00:0090       	bge	l18
+               S01:00000112:  6C 06
+F00:0091       	add.l	#31,d0
+               S01:00000114:  D0 BC 00 00 00 1F
+F00:0092       l18:
+F00:0093       	asr.l	#5,d0
+               S01:0000011A:  EA 80
+F00:0094       	add.w	d1,d0
+               S01:0000011C:  D0 41
+F00:0095       	moveq	#0,d1
+               S01:0000011E:  72 00
+F00:0096       	move.w	d0,d1
+               S01:00000120:  32 00
+F00:0097       	lsl.l	#8,d1
+               S01:00000122:  E1 89
+F00:0098       	and.l	#65535,d0
+               S01:00000124:  C0 BC 00 00 FF FF
+F00:0099       	asr.l	#8,d0
+               S01:0000012A:  E0 80
+F00:0100       	or.l	d1,d0
+               S01:0000012C:  80 81
+F00:0101       	move.w	d0,12582912
+               S01:0000012E:  33 C0 00 C0 00 00
+F00:0102       	addq.l	#1,d2
+               S01:00000134:  52 82
+F00:0103       	cmp.l	(4,a2),d2
+               S01:00000136:  B4 AA 00 04
+F00:0104       	blt	l12
+               S01:0000013A:  6D 00 FF 7E
+F00:0105       l13
+F00:0106       	move.l	a2,-(a7)
+               S01:0000013E:  2F 0A
+F00:0107       	jsr	_fclose
+               S01:00000140:  4E B9 00 00 00 00 [R]
+F00:0108       	move.l	d6,-(a7)
+               S01:00000146:  2F 06
+F00:0109       	jsr	_VDP_Enable
+               S01:00000148:  4E B9 00 00 00 00 [R]
+F00:0110       	jsr	_enableCPUInterrupts
+               S01:0000014E:  4E B9 00 00 00 00 [R]
+F00:0111       	addq.w	#8,a7
+               S01:00000154:  50 4F
+F00:0112       l14	reg	a2/a3/d2/d3/d4/d5/d6
+F00:0113       	movem.l	(a7)+,a2/a3/d2/d3/d4/d5/d6
+               S01:00000156:  4C DF 0C 7C
+F00:0114       	unlk	a5
+               S01:0000015A:  4E 5D
+F00:0115       	rts
+               S01:0000015C:  4E 75
+F00:0116       	cnop	0,4
+F00:0117       l3
+F00:0118       	dc.b	66
+               S01:00000160:  42
+F00:0119       	dc.b	97
+               S01:00000161:  61
+F00:0120       	dc.b	99
+               S01:00000162:  63
+F00:0121       	dc.b	107
+               S01:00000163:  6B
+F00:0122       	dc.b	103
+               S01:00000164:  67
+F00:0123       	dc.b	114
+               S01:00000165:  72
+F00:0124       	dc.b	111
+               S01:00000166:  6F
+F00:0125       	dc.b	117
+               S01:00000167:  75
+F00:0126       	dc.b	110
+               S01:00000168:  6E
+F00:0127       	dc.b	100
+               S01:00000169:  64
+F00:0128       	dc.b	115
+               S01:0000016A:  73
+F00:0129       	dc.b	47
+               S01:0000016B:  2F
+F00:0130       	dc.b	109
+               S01:0000016C:  6D
+F00:0131       	dc.b	111
+               S01:0000016D:  6F
+F00:0132       	dc.b	117
+               S01:0000016E:  75
+F00:0133       	dc.b	110
+               S01:0000016F:  6E
+F00:0134       	dc.b	116
+               S01:00000170:  74
+F00:0135       	dc.b	97
+               S01:00000171:  61
+F00:0136       	dc.b	105
+               S01:00000172:  69
+F00:0137       	dc.b	110
+               S01:00000173:  6E
+F00:0138       	dc.b	95
+               S01:00000174:  5F
+F00:0139       	dc.b	99
+               S01:00000175:  63
+F00:0140       	dc.b	111
+               S01:00000176:  6F
+F00:0141       	dc.b	108
+               S01:00000177:  6C
+F00:0142       	dc.b	111
+               S01:00000178:  6F
+F00:0143       	dc.b	114
+               S01:00000179:  72
+F00:0144       	dc.b	115
+               S01:0000017A:  73
+F00:0145       	dc.b	46
+               S01:0000017B:  2E
+F00:0146       	dc.b	98
+               S01:0000017C:  62
+F00:0147       	dc.b	105
+               S01:0000017D:  69
+F00:0148       	dc.b	110
+               S01:0000017E:  6E
+F00:0149       	dc.b	0
+               S01:0000017F:  00
+F00:0150       	cnop	0,4
+F00:0151       l4
+F00:0152       	dc.b	66
+               S01:00000180:  42
+F00:0153       	dc.b	97
+               S01:00000181:  61
+F00:0154       	dc.b	99
+               S01:00000182:  63
+F00:0155       	dc.b	107
+               S01:00000183:  6B
+F00:0156       	dc.b	103
+               S01:00000184:  67
+F00:0157       	dc.b	114
+               S01:00000185:  72
+F00:0158       	dc.b	111
+               S01:00000186:  6F
+F00:0159       	dc.b	117
+               S01:00000187:  75
+F00:0160       	dc.b	110
+               S01:00000188:  6E
+F00:0161       	dc.b	100
+               S01:00000189:  64
+F00:0162       	dc.b	115
+               S01:0000018A:  73
+F00:0163       	dc.b	47
+               S01:0000018B:  2F
+F00:0164       	dc.b	109
+               S01:0000018C:  6D
+F00:0165       	dc.b	111
+               S01:0000018D:  6F
+F00:0166       	dc.b	117
+               S01:0000018E:  75
+F00:0167       	dc.b	110
+               S01:0000018F:  6E
+F00:0168       	dc.b	116
+               S01:00000190:  74
+F00:0169       	dc.b	97
+               S01:00000191:  61
+F00:0170       	dc.b	105
+               S01:00000192:  69
+F00:0171       	dc.b	110
+               S01:00000193:  6E
+F00:0172       	dc.b	95
+               S01:00000194:  5F
+F00:0173       	dc.b	103
+               S01:00000195:  67
+F00:0174       	dc.b	102
+               S01:00000196:  66
+F00:0175       	dc.b	120
+               S01:00000197:  78
+F00:0176       	dc.b	46
+               S01:00000198:  2E
+F00:0177       	dc.b	98
+               S01:00000199:  62
+F00:0178       	dc.b	105
+               S01:0000019A:  69
+F00:0179       	dc.b	110
+               S01:0000019B:  6E
+F00:0180       	dc.b	0
+               S01:0000019C:  00
+F00:0181       	cnop	0,4
+F00:0182       l5
+F00:0183       	dc.b	66
+               S01:000001A0:  42
+F00:0184       	dc.b	97
+               S01:000001A1:  61
+F00:0185       	dc.b	99
+               S01:000001A2:  63
+F00:0186       	dc.b	107
+               S01:000001A3:  6B
+F00:0187       	dc.b	103
+               S01:000001A4:  67
+F00:0188       	dc.b	114
+               S01:000001A5:  72
+F00:0189       	dc.b	111
+               S01:000001A6:  6F
+F00:0190       	dc.b	117
+               S01:000001A7:  75
+F00:0191       	dc.b	110
+               S01:000001A8:  6E
+F00:0192       	dc.b	100
+               S01:000001A9:  64
+F00:0193       	dc.b	115
+               S01:000001AA:  73
+F00:0194       	dc.b	47
+               S01:000001AB:  2F
+F00:0195       	dc.b	109
+               S01:000001AC:  6D
+F00:0196       	dc.b	111
+               S01:000001AD:  6F
+F00:0197       	dc.b	117
+               S01:000001AE:  75
+F00:0198       	dc.b	110
+               S01:000001AF:  6E
+F00:0199       	dc.b	116
+               S01:000001B0:  74
+F00:0200       	dc.b	97
+               S01:000001B1:  61
+F00:0201       	dc.b	105
+               S01:000001B2:  69
+F00:0202       	dc.b	110
+               S01:000001B3:  6E
+F00:0203       	dc.b	95
+               S01:000001B4:  5F
+F00:0204       	dc.b	116
+               S01:000001B5:  74
+F00:0205       	dc.b	105
+               S01:000001B6:  69
+F00:0206       	dc.b	108
+               S01:000001B7:  6C
+F00:0207       	dc.b	101
+               S01:000001B8:  65
+F00:0208       	dc.b	109
+               S01:000001B9:  6D
+F00:0209       	dc.b	97
+               S01:000001BA:  61
+F00:0210       	dc.b	112
+               S01:000001BB:  70
+F00:0211       	dc.b	46
+               S01:000001BC:  2E
+F00:0212       	dc.b	98
+               S01:000001BD:  62
+F00:0213       	dc.b	105
+               S01:000001BE:  69
+F00:0214       	dc.b	110
+               S01:000001BF:  6E
+F00:0215       	dc.b	0
+               S01:000001C0:  00
+F00:0216       	public	_memcpy
+F00:0217       	public	_fopen
+F00:0218       	public	_fclose
+F00:0219       	public	_VDP_Enable
+F00:0220       	public	_VDP_Disable
+F00:0221       	public	_VDP_WriteCommand
+F00:0222       	public	_VDP_AllocVram
+F00:0223       	public	_VDP_CommitColorBuffer
+F00:0224       	public	_colorBuffer
+F00:0225       	public	_WaitForVblank
+F00:0226       	public	_disableCPUInterrupts
+F00:0227       	public	_enableCPUInterrupts
+F00:0228       	public	_DMA_MemoryToVram
+F00:0229       
+
+
+Sections:
+S01  CODE
+
+
+Sources:
+F00  Background.asm
+
+
+Symbols:
+_enableCPUInterrupts IMP EXPORT REF 
+_VDP_Enable IMP EXPORT REF 
+l18 LAB (0x11a) sec=CODE 
+_VDP_WriteCommand IMP EXPORT REF 
+l11 LAB (0xea) sec=CODE 
+__lmods IMP EXPORT REF 
+l12 LAB (0xba) sec=CODE 
+l13 LAB (0x13e) sec=CODE 
+l5 LAB (0x1a0) sec=CODE 
+_DMA_MemoryToVram IMP EXPORT REF 
+_VDP_AllocVram IMP EXPORT REF 
+l17 LAB (0x70) sec=CODE 
+l4 LAB (0x180) sec=CODE 
+_fclose IMP EXPORT REF 
+_VDP_CommitColorBuffer IMP EXPORT REF 
+_memcpy IMP EXPORT REF 
+_colorBuffer IMP EXPORT REF 
+_fopen IMP EXPORT REF 
+l3 LAB (0x160) sec=CODE 
+_disableCPUInterrupts IMP EXPORT REF 
+_WaitForVblank IMP EXPORT REF 
+_VDP_Disable IMP EXPORT REF 
+l14 EXPR(3196=0xc7c) EQU REGL 
+_LoadBackground LAB (0x0) UNUSED EXPORT sec=CODE 
+_MOVEMBYTES EXPR(28=0x1c) INTERNAL 
+ MOVEMSIZE EXPR(4=0x4) INTERNAL 
+_MOVEMREGS EXPR(3196=0xc7c) INTERNAL 
+__LINE__ EXPR(229=0xe5) INTERNAL 
+__FO EXPR(0=0x0) INTERNAL 
+__RS EXPR(0=0x0) INTERNAL 
+REPTN EXPR(-1=0xffffffff) INTERNAL 
+__VASM EXPR(1=0x1) INTERNAL 
+__UNIXFS EXPR(0=0x0) INTERNAL 
+
+There have been no errors.

@@ -1,0 +1,100 @@
+F00:0001       ;===============================================================================
+F00:0002       ;modulo.asm
+F00:0003       ;===============================================================================
+F00:0004       ;because this '%' is not defined in vbcc68k, must write it myself
+F00:0005       ;
+F00:0006       ;Had to pull out the C99 definition:
+F00:0007       ;
+F00:0008       ;https://stackoverflow.com/questions/11720656/modulo-operation-with-negative-numbers
+F00:0009       ;
+F00:0010       ;C99 requires that when a/b is representable:
+F00:0011       l
+F00:0012       ;(a/b) * b + a%b shall equal a
+F00:0013       ;This makes sense, logically. Right?
+F00:0014       ;Let's see what this leads to:
+F00:0015       ;Example A. 5/(-3) is -1 => (-1) * (-3) + 5%(-3) = 5
+F00:0016       ;This can only happen if 5%(-3) is 2.
+F00:0017       ;Example B. (-5)/3 is -1 => (-1) * 3 + (-5)%3 = -5
+F00:0018       ;This can only happen if (-5)%3 is -2
+F00:0019       ;
+F00:0020       ;-------------------------------------------------------------------------------
+F00:0021       
+F00:0022       ;///////////////////////////////////////////////////////////////////////////////
+F00:0023       	section	"BSS",bss
+F00:0024       ;///////////////////////////////////////////////////////////////////////////////
+F00:0025       	section	"DATA",data
+F00:0026       ;///////////////////////////////////////////////////////////////////////////////
+F00:0027       	section	"CODE",code
+F00:0028       
+F00:0029       ;---------------------------------------
+F00:0030       ;__lmodu
+F00:0031       ;
+F00:0032       ;modulo operator, this is ment to be used by C expressions and not to
+F00:0033       ;be called explicitly
+F00:0034       ;
+F00:0035       ;Calling Convention:
+F00:0036       ;---------------------------------------
+F00:0037       
+F00:0038       ;	(clock % 7);
+F00:0039       ;	move.l	#7,-(a7)
+F00:0040       ;	move.l	_clock,-(a7)
+F00:0041       ;	jsr	__lmodu
+F00:0042       ;	addq.w	#8,a7
+F00:0043       
+F00:0044       	public	__lmodu
+F00:0045       	public __lmods
+F00:0046       __lmodu:
+F00:0047       __lmods:
+F00:0048       	link	a5,#0
+               S01:00000000:  4E 55 00 00
+F00:0049       	move.l	(8,a5),d0
+               S01:00000004:  20 2D 00 08
+F00:0050       	move.l	(12,a5),d1
+               S01:00000008:  22 2D 00 0C
+F00:0051       	divs	d1,d0
+               S01:0000000C:  81 C1
+F00:0052       	swap	d0
+               S01:0000000E:  48 40
+F00:0053       	and.l	#$0000FFFF,d0
+               S01:00000010:  C0 BC 00 00 FF FF
+F00:0054       	unlk	a5
+               S01:00000016:  4E 5D
+F00:0055       	rts
+               S01:00000018:  4E 75
+F00:0056       
+F00:0057       ;---------------------------------------
+F00:0058       ;Function Name
+F00:0059       ;
+F00:0060       ;Description
+F00:0061       ;
+F00:0062       ;Calling Convention
+F00:0063       ;
+F00:0064       ;---------------------------------------
+F00:0065       
+
+
+Sections:
+S01  CODE
+S02  BSS
+S03  DATA
+
+
+Sources:
+F00  modulo.asm
+
+
+Symbols:
+__lmods LAB (0x0) UNUSED EXPORT sec=CODE 
+__lmodu LAB (0x0) UNUSED EXPORT sec=CODE 
+l LAB (0x0) UNUSED sec=CODE 
+_MOVEMBYTES EXPR(0=0x0) INTERNAL 
+ MOVEMSIZE EXPR(0=0x0) INTERNAL 
+_MOVEMREGS EXPR(0=0x0) INTERNAL 
+__LINE__ EXPR(65=0x41) INTERNAL 
+__FO EXPR(0=0x0) INTERNAL 
+__RS EXPR(0=0x0) INTERNAL 
+REPTN EXPR(-1=0xffffffff) INTERNAL 
+__VASM EXPR(1=0x1) INTERNAL 
+__UNIXFS EXPR(0=0x0) INTERNAL 
+
+There have been no errors.

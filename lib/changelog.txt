@@ -1,0 +1,83 @@
+04/18/2022:
+converted the running animation of the knight to genesis format and animated
+the player to run when pressing the D-pad, and stand still when pressing nothing
+
+04/14/2022:
+fixed a bug in insertInLinkedList where it was reading from uninitialized memory due to assignment errors.
+
+04/12/2022:
+moved some of the knight data to files instead of hardcoded arrays in source code.
+I'm at the point where I need that color allocation routine pronto.
+Then I need to convert the colors and graphics so that its dynamic instead of static
+
+
+04/04/2022:
+started importing and converting art to the sega genesis specification
+so we had somthing to show for checkpoint 4.
+continued adding support for that nes sprite tiling system.
+added the linked-list data structure. should have had this sooner
+Spent 6+ hours trying to get the background image to display correctly
+because the C compiler expects all bytes to be word aligned.
+Moved the background code to its own file: Background.c & Background.h
+worked a lot on the sprite engine:
+added tiles and stuff, added a lot of data structures
+added a new buffer for sprite data must be sent by DMA to the VDP,
+because of that I needed a new DMA command, so vdpAbstract.asm got an update
+
+04/03/2022:
+removed a lot of buggy code from the stage engine, now we only scroll left
+and right now.
+reworked the sprite engine sub-system to be more user friendly.
+started adding support for the nes style sprite tiling method.
+
+03/21/2022:
+added support for joypad(s)
+put in support for virtical screen scrolling
+
+
+03/20/2022:
+finished testing loading horizontal data when scrolling to the left
+discovered a flaw in the my DMA system, it can only load to the left.
+because of fixed vdp auto-increment value
+changed to variable in dma.h edited the methods in dma.c and dma_a.asm
+added controls for both virtical and horizontal scrolling
+
+03/19/2022:
+put the sprite engine on hold
+started stage engine,
+designed a map system to accept a 16x16 grid of metta metta tiles
+copied the map system and extended it for 16x16 metta tiles
+this means that the maximum map size is 256x256 tiles
+got a method that will load a full 64x64 tiled background
+
+
+02/27/2022:
+finished vram block concatination
+fixed a bug in VDP_searchForFreeTiles that gave the wrong vram address for
+blocks being split
+started the sprite engine
+
+02/14/2022:
+started concatinating blocks of free tiles together
+
+02/08/2022:
+added VDP_SearchForFreeTiles
+completed the VDP_AllocVram routine
+started a basic VDP_FreeVram routine, does not concatinate block yet
+added block breaking in VDP_AllocVram so we can get exact size blocks
+and create new ones of exra sizes.
+fixed a bug in the DMA queue when DMA_VramCopy is not the last element.
+fixed a bug in VDP_SearchForFreeTiles where exact blocks were not accepted
+
+02/01/2022:
+start VDP_AllocVram, just a naive allocate currently
+added modulo operation for non powers of 2.
+fixed DMA_VramCopy not working on real hardware
+fixed memory curruption issue in DMA_VramCopy.
+fixed a off by 1 bug in DMA_VramFill.
+
+01/31/2022:
+change makefile to not blanket delete everything when cleaning
+added the DMA fill and copy
+fixed a bug in fileio.asm that trashed varuous registers when returning.
+Started keeping a log, in reality this project started around mid december 2021.

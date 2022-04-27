@@ -1,0 +1,380 @@
+F00:0001       ;===============================================================================
+F00:0002       ;dma_a.asm
+F00:0003       ;===============================================================================
+F00:0004       ;this is the assembly based queue processor for DMA,
+F00:0005       ;things that polulate that array are defined in DMA.c
+F00:0006       ;-------------------------------------------------------------------------------
+F00:0007       
+F00:0008       	include	"vdpAbstraction.inc"
+F01:0001       ;===============================================================================
+F01:0002       ;vdpAbstraction.inc
+F01:0003       ;===============================================================================
+F01:0004       ;defines vdp ports and constants for other assembly files
+F01:0005       ;-------------------------------------------------------------------------------
+F01:0006       
+F01:0007       ;VDP registers
+F01:0008       VDP_DATA equ $00C00000
+F01:0009       VDP_CTRL equ $00C00004
+F01:0010       VDP_HVCOUNTER equ $00C00008
+F01:0011       
+F01:0012       ;VDP constants
+F01:0013       VDP_REGION_NTSC equ 1
+F01:0014       VDP_REGION_PAL equ 2
+F01:0015       
+F01:0016       ;User DMA constants
+F01:0017       DMA_TYPE_MAIN equ 0
+F01:0018       DMA_TYPE_FILL equ 1
+F01:0019       DMA_TYPE_COPY equ 2
+F01:0020       
+F01:0021       ;VDP data sizes in bytes
+F01:0022       VRAM_SIZE    equ 65536
+F01:0023       CRAM_SIZE    equ 128
+F01:0024       VSRAM_SIZE   equ 80
+F01:0025       
+F01:0026       ;VDP command constants
+F01:0027       VRAM_WRITE_CMD equ $40000000
+F01:0028       CRAM_WRITE_CMD equ $C0000000
+F01:0029       VSRAM_WRITE_CMD equ $40000010
+F01:0030       VRAM_READ_CMD equ $00000000
+F01:0031       CRAM_READ_CMD equ $00000040
+F01:0032       VSRAM_READ_CMD equ $00000020
+F01:0033       VRAM_DMA_CMD equ $40000080
+F01:0034       CRAM_DMA_CMD equ $C0000080
+F01:0035       VSRAM_DMA_CMD equ $40000090
+F01:0036       ;///////////////////////////////////////////////////////////////////////////////
+F01:0037       
+F00:0009       
+F00:0010       ;queue notes
+F00:0011       ;dmaType	ds.l	1
+F00:0012       ;length		ds.w	1
+F00:0013       ;dmaStart	ds.l	1
+F00:0014       ;dmaSource	ds.l	1
+F00:0015       ;14 bytes
+F00:0016       ;///////////////////////////////////////////////////////////////////////////////
+F00:0017       	section	"BSS",bss
+F00:0018       buffer	ds.w 6
+F00:0019       ;///////////////////////////////////////////////////////////////////////////////
+F00:0020       	section	"DATA",data
+F00:0021       ;///////////////////////////////////////////////////////////////////////////////
+F00:0022       	section	"CODE",code
+F00:0023       
+F00:0024       ;---------------------------------------
+F00:0025       ;_DMA_ProcessQueue
+F00:0026       ;
+F00:0027       ;takes the array _queueIndex and feeds
+F00:0028       ;it to the DMA unit
+F00:0029       ;
+F00:0030       ;Calling Convention
+F00:0031       ;	bsr	_DMA_ProcessQueue
+F00:0032       ; or
+F00:0033       ;	DMA_ProcessQueue();
+F00:0034       ;---------------------------------------
+F00:0035       ;a0 = table address
+F00:0036       ;a1 = VDP_CTRL
+F00:0037       ;a2 = movep buffer
+F00:0038       ;d0 = scratch
+F00:0039       ;d1 = counter
+F00:0040       
+F00:0041       	public	_DMA_ProcessQueue
+F00:0042       _DMA_ProcessQueue:
+F00:0043       	link	a5,#0
+               S03:00000000:  4E 55 00 00
+F00:0044       
+F00:0045       	move.l	a2,-(sp)	;might use A2
+               S03:00000004:  2F 0A
+F00:0046       
+F00:0047       	lea	_queueArea,a0	;start at the beginning
+               S03:00000006:  41 F9 00 00 00 00 [R]
+F00:0048       	lea	VDP_CTRL,a1	;we will be using this a lot
+               S03:0000000C:  43 F9 00 C0 00 04
+F00:0049       	lea	buffer,a2	;buffer for movep instruction
+               S03:00000012:  45 F9 00 00 00 00 [R]
+F00:0050       	moveq	#0,d1		;and the first element
+               S03:00000018:  72 00
+F00:0051       	move.b	_queueIndex,d1
+               S03:0000001A:  12 39 00 00 00 00 [R]
+F00:0052       	bra	.enter
+               S03:00000020:  60 00 00 CC
+F00:0053       ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+F00:0054       .loop:	move.l	(a0)+,d0
+               S03:00000024:  20 18
+F00:0055       	tst.l	d0		;memory to vdp?
+               S03:00000026:  4A 80
+F00:0056       	bne	.notMain	;no: check dma fill
+               S03:00000028:  66 42
+F00:0057       
+F00:0058       ;hacked in direction
+F00:0059       	move.w	#$8F00,d0
+               S03:0000002A:  30 3C 8F 00
+F00:0060       	add.b	(a0)+,d0
+               S03:0000002E:  D0 18
+F00:0061       	addq.l	#1,a0
+               S03:00000030:  52 88
+F00:0062       	move.w	d0,(a1)
+               S03:00000032:  32 80
+F00:0063       
+F00:0064       ;	move.w	#$8F02,(a1)	;every word
+F00:0065       ;	addq.l	#2,a0
+F00:0066       
+F00:0067       	move.l	(a0)+,-(sp)	;we need to write this 4 bytes last
+               S03:00000034:  2F 18
+F00:0068       
+F00:0069       	move.w	#$9493,d0	;dma size vdp registers
+               S03:00000036:  30 3C 94 93
+F00:0070       	movep.w	d0,0(a2)	;write it
+               S03:0000003A:  01 8A 00 00
+F00:0071       	move.w	(a0)+,d0	;size value
+               S03:0000003E:  30 18
+F00:0072       	movep.w	d0,1(a2)	;write it
+               S03:00000040:  01 8A 00 01
+F00:0073       
+F00:0074       	move.l	#$00979695,d0	;dma source vdp registers
+               S03:00000044:  20 3C 00 97 96 95
+F00:0075       	movep.l	d0,4(a2)
+               S03:0000004A:  01 CA 00 04
+F00:0076       	move.l	(a0)+,d0	;23 bit address as 32 bit value
+               S03:0000004E:  20 18
+F00:0077       	movep.l	d0,5(a2)
+               S03:00000050:  01 CA 00 05
+F00:0078       
+F00:0079       ;pipe all the data to the DMA VDP registers
+F00:0080       	move.w	(a2),(a1)	;size high
+               S03:00000054:  32 92
+F00:0081       	move.w	(2,a2),(a1)	;size low
+               S03:00000056:  32 AA 00 02
+F00:0082       	move.w	(6,a2),(a1)	;source high
+               S03:0000005A:  32 AA 00 06
+F00:0083       	move.w	(8,a2),(a1)	;source mid
+               S03:0000005E:  32 AA 00 08
+F00:0084       	move.w	(10,a2),(a1)	;source low
+               S03:00000062:  32 AA 00 0A
+F00:0085       
+F00:0086       ;Start the dma's
+F00:0087       	move.l	(sp)+,(a1)	;start the DMA
+               S03:00000066:  22 9F
+F00:0088       
+F00:0089       	bra	.enter		;skip spin check
+               S03:00000068:  60 00 00 84
+F00:0090       ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+F00:0091       .notMain:
+F00:0092       	cmpi	#1,d0		;fill?
+               S03:0000006C:  0C 40 00 01
+F00:0093       	bne	.notFill	;no: check copy
+               S03:00000070:  66 30
+F00:0094       
+F00:0095       
+F00:0096       ;hacked in direction
+F00:0097       	move.w	#$8F00,d0
+               S03:00000072:  30 3C 8F 00
+F00:0098       	add.b	(a0)+,d0
+               S03:00000076:  D0 18
+F00:0099       	addq.l	#1,a0
+               S03:00000078:  52 88
+F00:0100       	move.w	d0,(a1)
+               S03:0000007A:  32 80
+F00:0101       
+F00:0102       ;	move.w	#$8F01,(a1)	;every byte
+F00:0103       ;	addq.l	#2,a0
+F00:0104       
+F00:0105       	move.l	(a0)+,-(sp)	;we need to write this 4 bytes last
+               S03:0000007C:  2F 18
+F00:0106       
+F00:0107       	move.w	#$9493,d0	;dma size vdp registers
+               S03:0000007E:  30 3C 94 93
+F00:0108       	movep.w	d0,0(a2)	;write it
+               S03:00000082:  01 8A 00 00
+F00:0109       	move.w	(a0)+,d0	;size value
+               S03:00000086:  30 18
+F00:0110       	movep.w	d0,1(a2)	;write it
+               S03:00000088:  01 8A 00 01
+F00:0111       
+F00:0112       ;pipe all the data to the DMA VDP registers
+F00:0113       	move.w	(a2),(a1)	;size high
+               S03:0000008C:  32 92
+F00:0114       	move.w	(2,a2),(a1)	;size low
+               S03:0000008E:  32 AA 00 02
+F00:0115       
+F00:0116       	move.w	#$9780,(a1)
+               S03:00000092:  32 BC 97 80
+F00:0117       
+F00:0118       ;Start the dma's
+F00:0119       	move.l	(sp)+,(a1)	;start the DMA
+               S03:00000096:  22 9F
+F00:0120       	move.b	(a0)+,(VDP_DATA)	;write the value to fill with
+               S03:00000098:  13 D8 00 C0 00 00
+F00:0121       
+F00:0122       ;skip the unused bytes in the union
+F00:0123       	addq.l	#3,a0
+               S03:0000009E:  56 88
+F00:0124       
+F00:0125       	bra	.spin	;wait for the DMA to complete before loading next
+               S03:000000A0:  60 44
+F00:0126       ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+F00:0127       .notFill:
+F00:0128       	cmpi	#2,d0	;copy?
+               S03:000000A2:  0C 40 00 02
+F00:0129       	bne	.enter	;no: just skip it
+               S03:000000A6:  66 46
+F00:0130       
+F00:0131       
+F00:0132       ;hacked in direction
+F00:0133       	move.w	#$8F00,d0
+               S03:000000A8:  30 3C 8F 00
+F00:0134       	add.b	(a0)+,d0
+               S03:000000AC:  D0 18
+F00:0135       	addq.l	#1,a0
+               S03:000000AE:  52 88
+F00:0136       	move.w	d0,(a1)
+               S03:000000B0:  32 80
+F00:0137       
+F00:0138       ;	move.w	#$8F01,(a1)	;every byte
+F00:0139       ;	addq.l	#2,a0
+F00:0140       
+F00:0141       	move.l	(a0)+,-(sp)	;we need to write this 4 bytes last
+               S03:000000B2:  2F 18
+F00:0142       
+F00:0143       	move.w	#$9493,d0	;dma size vdp registers
+               S03:000000B4:  30 3C 94 93
+F00:0144       	movep.w	d0,0(a2)	;write it
+               S03:000000B8:  01 8A 00 00
+F00:0145       	move.w	(a0)+,d0	;size value
+               S03:000000BC:  30 18
+F00:0146       	movep.w	d0,1(a2)	;write it
+               S03:000000BE:  01 8A 00 01
+F00:0147       
+F00:0148       	move.w	#$9695,d0	;dma size vdp registers
+               S03:000000C2:  30 3C 96 95
+F00:0149       	movep.w	d0,4(a2)	;write it
+               S03:000000C6:  01 8A 00 04
+F00:0150       	move.w	(a0)+,d0	;size value
+               S03:000000CA:  30 18
+F00:0151       	movep.w	d0,5(a2)	;write it
+               S03:000000CC:  01 8A 00 05
+F00:0152       
+F00:0153       ;pipe all the data to the DMA VDP registers
+F00:0154       	move.w	(a2),(a1)	;size high
+               S03:000000D0:  32 92
+F00:0155       	move.w	(2,a2),(a1)	;size low
+               S03:000000D2:  32 AA 00 02
+F00:0156       	move.w	(4,a2),(a1)	;vram high
+               S03:000000D6:  32 AA 00 04
+F00:0157       	move.w	(6,a2),(a1)	;vram low
+               S03:000000DA:  32 AA 00 06
+F00:0158       
+F00:0159       	move.w	#$97C0,(a1)
+               S03:000000DE:  32 BC 97 C0
+F00:0160       
+F00:0161       ;Start the dma's
+F00:0162       	move.l	(sp)+,(a1)	;start the DMA
+               S03:000000E2:  22 9F
+F00:0163       ;	move.w	(a0)+,(VDP_DATA)	;where are we starting at
+F00:0164       
+F00:0165       ;skip the unused bytes in the union
+F00:0166       	addq.l	#2,a0
+               S03:000000E4:  54 88
+F00:0167       
+F00:0168       ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+F00:0169       ;wait for the DMA to finish before we start using the VDP again
+F00:0170       .spin:	move.w	(a1),d0		;read VDP status
+               S03:000000E6:  30 11
+F00:0171       	btst	#1,d0		;dma finished?
+               S03:000000E8:  08 00 00 01
+F00:0172       	bne	.spin		;no: continue
+               S03:000000EC:  66 F8
+F00:0173       
+F00:0174       .enter:	dbra	d1,.loop
+               S03:000000EE:  51 C9 FF 34
+F00:0175       
+F00:0176       ;reset queue index
+F00:0177       	move.b	#0,_queueIndex
+               S03:000000F2:  13 FC 00 00 00 00 00 00 [R]
+F00:0178       
+F00:0179       	move.l	(sp)+,a2
+               S03:000000FA:  24 5F
+F00:0180       	unlk	a5
+               S03:000000FC:  4E 5D
+F00:0181       	rts
+               S03:000000FE:  4E 75
+F00:0182       
+F00:0183       ;---------------------------------------
+F00:0184       ;_DMA_Init
+F00:0185       ;
+F00:0186       ;call this once to make sure boolean is false
+F00:0187       ;
+F00:0188       ;Calling Convention
+F00:0189       ;
+F00:0190       ;---------------------------------------
+F00:0191       	public	_DMA_Init
+F00:0192       _DMA_Init:
+F00:0193       	move.b	#0,_processDMAQueue
+               S03:00000100:  13 FC 00 00 00 00 00 00 [R]
+F00:0194       	move.b	#0,_queueIndex
+               S03:00000108:  13 FC 00 00 00 00 00 00 [R]
+F00:0195       	rts
+               S03:00000110:  4E 75
+F00:0196       
+F00:0197       ;---------------------------------------
+F00:0198       ;Function Name
+F00:0199       ;
+F00:0200       ;Description
+F00:0201       ;
+F00:0202       ;Calling Convention
+F00:0203       ;
+F00:0204       ;---------------------------------------
+F00:0205       
+
+
+Sections:
+S01  BSS
+S02  DATA
+S03  CODE
+
+
+Sources:
+F00  dma_a.asm
+F01  vdpAbstraction.inc
+
+
+Symbols:
+_processDMAQueue IMP REF 
+_DMA_Init LAB (0x100) UNUSED EXPORT sec=CODE 
+ _DMA_ProcessQueue .spin LAB (0xe6) sec=CODE 
+ _DMA_ProcessQueue .notFill LAB (0xa2) sec=CODE 
+ _DMA_ProcessQueue .notMain LAB (0x6c) sec=CODE 
+ _DMA_ProcessQueue .loop LAB (0x24) sec=CODE 
+ _DMA_ProcessQueue .enter LAB (0xee) sec=CODE 
+_queueIndex IMP REF 
+_queueArea IMP REF 
+_DMA_ProcessQueue LAB (0x0) UNUSED EXPORT sec=CODE 
+buffer LAB (0x0) REF sec=BSS 
+VSRAM_DMA_CMD EXPR(1073741968=0x40000090) UNUSED EQU 
+CRAM_DMA_CMD EXPR(-1073741696=0xc0000080) UNUSED EQU 
+VRAM_DMA_CMD EXPR(1073741952=0x40000080) UNUSED EQU 
+VSRAM_READ_CMD EXPR(32=0x20) UNUSED EQU 
+CRAM_READ_CMD EXPR(64=0x40) UNUSED EQU 
+VRAM_READ_CMD EXPR(0=0x0) UNUSED EQU 
+VSRAM_WRITE_CMD EXPR(1073741840=0x40000010) UNUSED EQU 
+CRAM_WRITE_CMD EXPR(-1073741824=0xc0000000) UNUSED EQU 
+VRAM_WRITE_CMD EXPR(1073741824=0x40000000) UNUSED EQU 
+VSRAM_SIZE EXPR(80=0x50) UNUSED EQU 
+CRAM_SIZE EXPR(128=0x80) UNUSED EQU 
+VRAM_SIZE EXPR(65536=0x10000) UNUSED EQU 
+DMA_TYPE_COPY EXPR(2=0x2) UNUSED EQU 
+DMA_TYPE_FILL EXPR(1=0x1) UNUSED EQU 
+DMA_TYPE_MAIN EXPR(0=0x0) UNUSED EQU 
+VDP_REGION_PAL EXPR(2=0x2) UNUSED EQU 
+VDP_REGION_NTSC EXPR(1=0x1) UNUSED EQU 
+VDP_HVCOUNTER EXPR(12582920=0xc00008) UNUSED EQU 
+VDP_CTRL EXPR(12582916=0xc00004) EQU 
+VDP_DATA EXPR(12582912=0xc00000) EQU 
+_MOVEMBYTES EXPR(0=0x0) INTERNAL 
+ MOVEMSIZE EXPR(0=0x0) INTERNAL 
+_MOVEMREGS EXPR(0=0x0) INTERNAL 
+__LINE__ EXPR(205=0xcd) INTERNAL 
+__FO EXPR(0=0x0) INTERNAL 
+__RS EXPR(0=0x0) INTERNAL 
+REPTN EXPR(-1=0xffffffff) INTERNAL 
+__VASM EXPR(1=0x1) INTERNAL 
+__UNIXFS EXPR(0=0x0) INTERNAL 
+
+There have been no errors.

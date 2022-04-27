@@ -1,0 +1,231 @@
+F00:0001       ;===============================================================================
+F00:0002       ;init.asm
+F00:0003       ;===============================================================================
+F00:0004       ;
+F00:0005       ;-------------------------------------------------------------------------------
+F00:0006       
+F00:0007       	include "vdpAbstraction.inc"
+F01:0001       ;===============================================================================
+F01:0002       ;vdpAbstraction.inc
+F01:0003       ;===============================================================================
+F01:0004       ;defines vdp ports and constants for other assembly files
+F01:0005       ;-------------------------------------------------------------------------------
+F01:0006       
+F01:0007       ;VDP registers
+F01:0008       VDP_DATA equ $00C00000
+F01:0009       VDP_CTRL equ $00C00004
+F01:0010       VDP_HVCOUNTER equ $00C00008
+F01:0011       
+F01:0012       ;VDP constants
+F01:0013       VDP_REGION_NTSC equ 1
+F01:0014       VDP_REGION_PAL equ 2
+F01:0015       
+F01:0016       ;User DMA constants
+F01:0017       DMA_TYPE_MAIN equ 0
+F01:0018       DMA_TYPE_FILL equ 1
+F01:0019       DMA_TYPE_COPY equ 2
+F01:0020       
+F01:0021       ;VDP data sizes in bytes
+F01:0022       VRAM_SIZE    equ 65536
+F01:0023       CRAM_SIZE    equ 128
+F01:0024       VSRAM_SIZE   equ 80
+F01:0025       
+F01:0026       ;VDP command constants
+F01:0027       VRAM_WRITE_CMD equ $40000000
+F01:0028       CRAM_WRITE_CMD equ $C0000000
+F01:0029       VSRAM_WRITE_CMD equ $40000010
+F01:0030       VRAM_READ_CMD equ $00000000
+F01:0031       CRAM_READ_CMD equ $00000040
+F01:0032       VSRAM_READ_CMD equ $00000020
+F01:0033       VRAM_DMA_CMD equ $40000080
+F01:0034       CRAM_DMA_CMD equ $C0000080
+F01:0035       VSRAM_DMA_CMD equ $40000090
+F01:0036       ;///////////////////////////////////////////////////////////////////////////////
+F01:0037       
+F00:0008       
+F00:0009       ;///////////////////////////////////////////////////////////////////////////////
+F00:0010       	section	"BSS",bss
+F00:0011       	public	_errno
+F00:0012       _errno	ds.l	1
+F00:0013       ;///////////////////////////////////////////////////////////////////////////////
+F00:0014       	section	"DATA",data
+F00:0015       
+F00:0016       vdpInitRegisters:
+F00:0017       	dc.w	$8114,$8F01,$9300,$9400,$9500,$9600,$9780
+               S02:00000000:  81 14
+               S02:00000002:  8F 01
+               S02:00000004:  93 00
+               S02:00000006:  94 00
+               S02:00000008:  95 00
+               S02:0000000A:  96 00
+               S02:0000000C:  97 80
+F00:0018       
+F00:0019       ;///////////////////////////////////////////////////////////////////////////////
+F00:0020       	section	"CODE",code
+F00:0021       
+F00:0022       ;---------------------------------------
+F00:0023       ;init
+F00:0024       ;
+F00:0025       ;sets up the sega genesis hardware
+F00:0026       ;
+F00:0027       ;Calling Convention:
+F00:0028       ;	bsr	_init
+F00:0029       ;---------------------------------------
+F00:0030       	public	_initSegaGenesis
+F00:0031       _initSegaGenesis:
+F00:0032       
+F00:0033       ;security system
+F00:0034       	move.b	$A10001,d0
+               S03:00000000:  10 39 00 A1 00 01
+F00:0035       	andi.b	#$0F,d0		;is TMSS available?
+               S03:00000006:  02 00 00 0F
+F00:0036       	beq	.noTmss		;No: no need to write
+               S03:0000000A:  67 0A
+F00:0037       	move.l	#'SEGA',$A14000	;Yes: Write 'SEGA' to TMSS to disable it
+               S03:0000000C:  23 FC 53 45 47 41 00 A1 40 00
+F00:0038       .noTmss:
+F00:0039       
+F00:0040       ;start vdp DMA to clear Vram
+F00:0041       
+F00:0042       	lea	VDP_CTRL,a1
+               S03:00000016:  43 F9 00 C0 00 04
+F00:0043       
+F00:0044       ;set VDP to known state, I.E flush any buffers
+F00:0045       	tst.w	(a1)
+               S03:0000001C:  4A 51
+F00:0046       
+F00:0047       ;we don't have a method to do this, so I just bake it in her
+F00:0048       	lea	vdpInitRegisters,a0
+               S03:0000001E:  41 F9 00 00 00 00 [R]
+F00:0049       	moveq	#7,d0
+               S03:00000024:  70 07
+F00:0050       	bra	.entrA
+               S03:00000026:  60 02
+F00:0051       .loopA:	move.w	(a0)+,(a1)
+               S03:00000028:  32 98
+F00:0052       .entrA:	dbra	d0,.loopA
+               S03:0000002A:  51 C8 FF FC
+F00:0053       
+F00:0054       	move.l	#VRAM_DMA_CMD,(a1)
+               S03:0000002E:  22 BC 40 00 00 80
+F00:0055       	move.w	#0,(VDP_DATA)	;what byte to fill with
+               S03:00000034:  33 FC 00 00 00 C0 00 00
+F00:0056       
+F00:0057       ;clear first 32k of ram
+F00:0058       	move.l	#$00FF0000,a0
+               S03:0000003C:  20 7C 00 FF 00 00
+F00:0059       	move.l	#$07ff,d0
+               S03:00000042:  20 3C 00 00 07 FF
+F00:0060       .loopB:	clr.l	(a0)+
+               S03:00000048:  42 98
+F00:0061       	clr.l	(a0)+
+               S03:0000004A:  42 98
+F00:0062       	clr.l	(a0)+
+               S03:0000004C:  42 98
+F00:0063       	clr.l	(a0)+
+               S03:0000004E:  42 98
+F00:0064       	dbra	d0,.loopB
+               S03:00000050:  51 C8 FF F6
+F00:0065       
+F00:0066       ;wait for the DMA to finish before we start using the VDP again
+F00:0067       .loopC:	move.w	(a1),d0		;read VDP status
+               S03:00000054:  30 11
+F00:0068       	btst	#1,d0		;dma finished?
+               S03:00000056:  08 00 00 01
+F00:0069       	bne	.loopC		;no: continue
+               S03:0000005A:  66 F8
+F00:0070       
+F00:0071       ;init the VDP
+F00:0072       	bsr	_VDP_Init
+               S03:0000005C:  61 00 00 00 [R]
+F00:0073       
+F00:0074       ;init the heap
+F00:0075       	bsr	initHeap
+               S03:00000060:  61 00 00 00 [R]
+F00:0076       
+F00:0077       ;init filesystem
+F00:0078       	bsr	_InitFileSystem
+               S03:00000064:  61 00 00 00 [R]
+F00:0079       
+F00:0080       ;init DMA
+F00:0081       	bsr	_DMA_Init
+               S03:00000068:  61 00 00 00 [R]
+F00:0082       
+F00:0083       ;init controllers
+F00:0084       	bsr	_initControllers
+               S03:0000006C:  61 00 00 00 [R]
+F00:0085       
+F00:0086       ;pause the Z80
+F00:0087       	move.w	#0,($00A11100)
+               S03:00000070:  33 FC 00 00 00 A1 11 00
+F00:0088       
+F00:0089       	rts
+               S03:00000078:  4E 75
+F00:0090       
+F00:0091       ;---------------------------------------
+F00:0092       ;Function Name
+F00:0093       ;
+F00:0094       ;Description
+F00:0095       ;
+F00:0096       ;Calling Convention
+F00:0097       ;
+F00:0098       ;---------------------------------------
+F00:0099       
+
+
+Sections:
+S01  BSS
+S02  DATA
+S03  CODE
+
+
+Sources:
+F00  init.asm
+F01  vdpAbstraction.inc
+
+
+Symbols:
+_initControllers IMP REF 
+_DMA_Init IMP REF 
+_InitFileSystem IMP REF 
+initHeap IMP REF 
+_VDP_Init IMP REF 
+ _initSegaGenesis .loopC LAB (0x54) sec=CODE 
+ _initSegaGenesis .loopB LAB (0x48) sec=CODE 
+ _initSegaGenesis .loopA LAB (0x28) sec=CODE 
+ _initSegaGenesis .entrA LAB (0x2a) sec=CODE 
+ _initSegaGenesis .noTmss LAB (0x16) sec=CODE 
+_initSegaGenesis LAB (0x0) UNUSED EXPORT sec=CODE 
+vdpInitRegisters LAB (0x0) REF sec=DATA 
+_errno LAB (0x0) UNUSED EXPORT sec=BSS 
+VSRAM_DMA_CMD EXPR(1073741968=0x40000090) UNUSED EQU 
+CRAM_DMA_CMD EXPR(-1073741696=0xc0000080) UNUSED EQU 
+VRAM_DMA_CMD EXPR(1073741952=0x40000080) EQU 
+VSRAM_READ_CMD EXPR(32=0x20) UNUSED EQU 
+CRAM_READ_CMD EXPR(64=0x40) UNUSED EQU 
+VRAM_READ_CMD EXPR(0=0x0) UNUSED EQU 
+VSRAM_WRITE_CMD EXPR(1073741840=0x40000010) UNUSED EQU 
+CRAM_WRITE_CMD EXPR(-1073741824=0xc0000000) UNUSED EQU 
+VRAM_WRITE_CMD EXPR(1073741824=0x40000000) UNUSED EQU 
+VSRAM_SIZE EXPR(80=0x50) UNUSED EQU 
+CRAM_SIZE EXPR(128=0x80) UNUSED EQU 
+VRAM_SIZE EXPR(65536=0x10000) UNUSED EQU 
+DMA_TYPE_COPY EXPR(2=0x2) UNUSED EQU 
+DMA_TYPE_FILL EXPR(1=0x1) UNUSED EQU 
+DMA_TYPE_MAIN EXPR(0=0x0) UNUSED EQU 
+VDP_REGION_PAL EXPR(2=0x2) UNUSED EQU 
+VDP_REGION_NTSC EXPR(1=0x1) UNUSED EQU 
+VDP_HVCOUNTER EXPR(12582920=0xc00008) UNUSED EQU 
+VDP_CTRL EXPR(12582916=0xc00004) EQU 
+VDP_DATA EXPR(12582912=0xc00000) EQU 
+_MOVEMBYTES EXPR(0=0x0) INTERNAL 
+ MOVEMSIZE EXPR(0=0x0) INTERNAL 
+_MOVEMREGS EXPR(0=0x0) INTERNAL 
+__LINE__ EXPR(99=0x63) INTERNAL 
+__FO EXPR(0=0x0) INTERNAL 
+__RS EXPR(0=0x0) INTERNAL 
+REPTN EXPR(-1=0xffffffff) INTERNAL 
+__VASM EXPR(1=0x1) INTERNAL 
+__UNIXFS EXPR(0=0x0) INTERNAL 
+
+There have been no errors.

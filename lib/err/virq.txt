@@ -1,0 +1,234 @@
+F00:0001       ;===============================================================================
+F00:0002       ;virq.asm
+F00:0003       ;===============================================================================
+F00:0004       ;virtucal blank IRQ, happens at 60hz (NTSC) or 50hz (PAL)
+F00:0005       ;this is the only constant source of time on the system that does not require
+F00:0006       ;some wizard to work with us.
+F00:0007       ;-------------------------------------------------------------------------------
+F00:0008       
+F00:0009       	include "vdpAbstraction.inc"
+F01:0001       ;===============================================================================
+F01:0002       ;vdpAbstraction.inc
+F01:0003       ;===============================================================================
+F01:0004       ;defines vdp ports and constants for other assembly files
+F01:0005       ;-------------------------------------------------------------------------------
+F01:0006       
+F01:0007       ;VDP registers
+F01:0008       VDP_DATA equ $00C00000
+F01:0009       VDP_CTRL equ $00C00004
+F01:0010       VDP_HVCOUNTER equ $00C00008
+F01:0011       
+F01:0012       ;VDP constants
+F01:0013       VDP_REGION_NTSC equ 1
+F01:0014       VDP_REGION_PAL equ 2
+F01:0015       
+F01:0016       ;User DMA constants
+F01:0017       DMA_TYPE_MAIN equ 0
+F01:0018       DMA_TYPE_FILL equ 1
+F01:0019       DMA_TYPE_COPY equ 2
+F01:0020       
+F01:0021       ;VDP data sizes in bytes
+F01:0022       VRAM_SIZE    equ 65536
+F01:0023       CRAM_SIZE    equ 128
+F01:0024       VSRAM_SIZE   equ 80
+F01:0025       
+F01:0026       ;VDP command constants
+F01:0027       VRAM_WRITE_CMD equ $40000000
+F01:0028       CRAM_WRITE_CMD equ $C0000000
+F01:0029       VSRAM_WRITE_CMD equ $40000010
+F01:0030       VRAM_READ_CMD equ $00000000
+F01:0031       CRAM_READ_CMD equ $00000040
+F01:0032       VSRAM_READ_CMD equ $00000020
+F01:0033       VRAM_DMA_CMD equ $40000080
+F01:0034       CRAM_DMA_CMD equ $C0000080
+F01:0035       VSRAM_DMA_CMD equ $40000090
+F01:0036       ;///////////////////////////////////////////////////////////////////////////////
+F01:0037       
+F00:0010       
+F00:0011       ;///////////////////////////////////////////////////////////////////////////////
+F00:0012       	section	"BSS",bss
+F00:0013       	public	_clock
+F00:0014       _clock	ds.l	1
+F00:0015       
+F00:0016       virqSavedReg	ds.l	15
+F00:0017       
+F00:0018       
+F00:0019       ;///////////////////////////////////////////////////////////////////////////////
+F00:0020       	section	"DATA",data
+F00:0021       ;///////////////////////////////////////////////////////////////////////////////
+F00:0022       	section	"CODE",code
+F00:0023       
+F00:0024       ;---------------------------------------
+F00:0025       ;Function Name
+F00:0026       ;
+F00:0027       ;Description
+F00:0028       ;
+F00:0029       ;Calling Convention
+F00:0030       ;
+F00:0031       ;---------------------------------------
+F00:0032       	public	v_interrupt
+F00:0033       v_interrupt:
+F00:0034       
+F00:0035       ;push all registers
+F00:0036       	movem.l	d0-d7/a0-a6,virqSavedReg
+               S03:00000000:  48 F9 7F FF 00 00 00 04 [R]
+F00:0037       
+F00:0038       ;refresh VDP
+F00:0039       	tst.w	(VDP_CTRL)
+               S03:00000008:  4A 79 00 C0 00 04
+F00:0040       
+F00:0041       ;DMA colors?
+F00:0042       	tst.b	(vdpCommitColorBufferFlag)
+               S03:0000000E:  4A 39 00 00 00 00 [R]
+F00:0043       	beq	.noColorDMA
+               S03:00000014:  67 0C
+F00:0044       	bsr	VDP_DMAColorBuffer
+               S03:00000016:  61 00 00 00 [R]
+F00:0045       	move.b	#0,vdpCommitColorBufferFlag
+               S03:0000001A:  13 FC 00 00 00 00 00 00 [R]
+F00:0046       .noColorDMA:
+F00:0047       
+F00:0048       ;DMA vsram?
+F00:0049       	tst.b	(vdpCommitVSRAMBufferFlag)
+               S03:00000022:  4A 39 00 00 00 00 [R]
+F00:0050       	beq	.noVSRAMDAM
+               S03:00000028:  67 0C
+F00:0051       	bsr	VDP_DMAVSRAMBuffer
+               S03:0000002A:  61 00 00 00 [R]
+F00:0052       	move.b	#0,vdpCommitVSRAMBufferFlag
+               S03:0000002E:  13 FC 00 00 00 00 00 00 [R]
+F00:0053       .noVSRAMDAM:
+F00:0054       
+F00:0055       ;DMA sprite buffer?
+F00:0056       	tst.b	(vdpCommitSpriteBufferFlag)
+               S03:00000036:  4A 39 00 00 00 00 [R]
+F00:0057       	beq	.noSpriteDMA
+               S03:0000003C:  67 0C
+F00:0058       	bsr	VDP_DMASpriteBuffer
+               S03:0000003E:  61 00 00 00 [R]
+F00:0059       	move.b	#0,vdpCommitSpriteBufferFlag
+               S03:00000042:  13 FC 00 00 00 00 00 00 [R]
+F00:0060       .noSpriteDMA:
+F00:0061       
+F00:0062       ;Anything in the DMA queue?
+F00:0063       	tst.b	_processDMAQueue	; == 0: NO, != 0: YES
+               S03:0000004A:  4A 39 00 00 00 00 [R]
+F00:0064       	beq	.noDMA			;No: skip
+               S03:00000050:  67 0C
+F00:0065       	bsr	_DMA_ProcessQueue	;Yes: do them
+               S03:00000052:  61 00 00 00 [R]
+F00:0066       	move.b	#0,_processDMAQueue	;then set to false
+               S03:00000056:  13 FC 00 00 00 00 00 00 [R]
+F00:0067       .noDMA:
+F00:0068       
+F00:0069       ;commit shadow registers
+F00:0070       	bsr	_VDP_CommitShadowRegisters
+               S03:0000005E:  61 00 00 00 [R]
+F00:0071       
+F00:0072       ;commit horizontal scrolling register
+F00:0073       	move.l	#VRAM_WRITE_CMD,-(sp)
+               S03:00000062:  2F 3C 40 00 00 00
+F00:0074       	move.l	#$0000B800,-(sp)
+               S03:00000068:  2F 3C 00 00 B8 00
+F00:0075       	bsr	_VDP_WriteCommand
+               S03:0000006E:  61 00 00 00 [R]
+F00:0076       	addq.w	#8,sp
+               S03:00000072:  50 4F
+F00:0077       	move.l	d0,(VDP_CTRL)
+               S03:00000074:  23 C0 00 C0 00 04
+F00:0078       	move.w	_hScroll,d0
+               S03:0000007A:  30 39 00 00 00 00 [R]
+F00:0079       	neg	d0
+               S03:00000080:  44 40
+F00:0080       	move.w	d0,(VDP_DATA)
+               S03:00000082:  33 C0 00 C0 00 00
+F00:0081       
+F00:0082       ;update controllers
+F00:0083       	bsr	_updateControllerInputs
+               S03:00000088:  61 00 00 00 [R]
+F00:0084       
+F00:0085       
+F00:0086       ;mark that time has passed
+F00:0087       	add.l	#1,_clock
+               S03:0000008C:  52 B9 00 00 00 00 [R]
+F00:0088       
+F00:0089       ;restore all registers and return
+F00:0090       	movem.l	virqSavedReg,d0-d7/a0-a6
+               S03:00000092:  4C F9 7F FF 00 00 00 04 [R]
+F00:0091       	rte
+               S03:0000009A:  4E 73
+F00:0092       
+F00:0093       
+F00:0094       ;---------------------------------------
+F00:0095       ;Function Name
+F00:0096       ;
+F00:0097       ;Description
+F00:0098       ;
+F00:0099       ;Calling Convention
+F00:0100       ;
+F00:0101       ;---------------------------------------
+F00:0102       
+
+
+Sections:
+S01  BSS
+S02  DATA
+S03  CODE
+
+
+Sources:
+F00  virq.asm
+F01  vdpAbstraction.inc
+
+
+Symbols:
+_updateControllerInputs IMP REF 
+_hScroll IMP REF 
+_VDP_WriteCommand IMP REF 
+_VDP_CommitShadowRegisters IMP REF 
+_DMA_ProcessQueue IMP REF 
+ v_interrupt .noDMA LAB (0x5e) sec=CODE 
+_processDMAQueue IMP REF 
+VDP_DMASpriteBuffer IMP REF 
+ v_interrupt .noSpriteDMA LAB (0x4a) sec=CODE 
+vdpCommitSpriteBufferFlag IMP REF 
+VDP_DMAVSRAMBuffer IMP REF 
+ v_interrupt .noVSRAMDAM LAB (0x36) sec=CODE 
+vdpCommitVSRAMBufferFlag IMP REF 
+VDP_DMAColorBuffer IMP REF 
+ v_interrupt .noColorDMA LAB (0x22) sec=CODE 
+vdpCommitColorBufferFlag IMP REF 
+v_interrupt LAB (0x0) UNUSED EXPORT sec=CODE 
+virqSavedReg LAB (0x4) REF sec=BSS 
+_clock LAB (0x0) EXPORT REF sec=BSS 
+VSRAM_DMA_CMD EXPR(1073741968=0x40000090) UNUSED EQU 
+CRAM_DMA_CMD EXPR(-1073741696=0xc0000080) UNUSED EQU 
+VRAM_DMA_CMD EXPR(1073741952=0x40000080) UNUSED EQU 
+VSRAM_READ_CMD EXPR(32=0x20) UNUSED EQU 
+CRAM_READ_CMD EXPR(64=0x40) UNUSED EQU 
+VRAM_READ_CMD EXPR(0=0x0) UNUSED EQU 
+VSRAM_WRITE_CMD EXPR(1073741840=0x40000010) UNUSED EQU 
+CRAM_WRITE_CMD EXPR(-1073741824=0xc0000000) UNUSED EQU 
+VRAM_WRITE_CMD EXPR(1073741824=0x40000000) EQU 
+VSRAM_SIZE EXPR(80=0x50) UNUSED EQU 
+CRAM_SIZE EXPR(128=0x80) UNUSED EQU 
+VRAM_SIZE EXPR(65536=0x10000) UNUSED EQU 
+DMA_TYPE_COPY EXPR(2=0x2) UNUSED EQU 
+DMA_TYPE_FILL EXPR(1=0x1) UNUSED EQU 
+DMA_TYPE_MAIN EXPR(0=0x0) UNUSED EQU 
+VDP_REGION_PAL EXPR(2=0x2) UNUSED EQU 
+VDP_REGION_NTSC EXPR(1=0x1) UNUSED EQU 
+VDP_HVCOUNTER EXPR(12582920=0xc00008) UNUSED EQU 
+VDP_CTRL EXPR(12582916=0xc00004) EQU 
+VDP_DATA EXPR(12582912=0xc00000) EQU 
+_MOVEMBYTES EXPR(60=0x3c) INTERNAL 
+ MOVEMSIZE EXPR(4=0x4) INTERNAL 
+_MOVEMREGS EXPR(32767=0x7fff) INTERNAL 
+__LINE__ EXPR(102=0x66) INTERNAL 
+__FO EXPR(0=0x0) INTERNAL 
+__RS EXPR(0=0x0) INTERNAL 
+REPTN EXPR(-1=0xffffffff) INTERNAL 
+__VASM EXPR(1=0x1) INTERNAL 
+__UNIXFS EXPR(0=0x0) INTERNAL 
+
+There have been no errors.

@@ -1,0 +1,117 @@
+F00:0001       	idnt	"src/camera.c"
+F00:0002       	opt o+,ol+,op+,oc+,ot+,oj+,ob+,om+
+F00:0003       	section	"CODE",code
+F00:0004       	public	_initCamera
+F00:0005       	cnop	0,4
+F00:0006       _initCamera
+F00:0007       	link.w	a5,#0
+               S01:00000000:  4E 55 00 00
+F00:0008       	movem.l	l3,-(a7)
+F00:0009       	move.l	#0,_camera
+               S01:00000004:  42 B9 00 00 00 00 [R]
+F00:0010       l3	reg
+F00:0011       	unlk	a5
+               S01:0000000A:  4E 5D
+F00:0012       	rts
+               S01:0000000C:  4E 75
+F00:0013       ; stacksize=0
+F00:0014       	opt o+,ol+,op+,oc+,ot+,oj+,ob+,om+
+F00:0015       	public	_getCameraX
+F00:0016       	cnop	0,4
+F00:0017       _getCameraX
+F00:0018       	link.w	a5,#0
+               S01:00000010:  4E 55 00 00
+F00:0019       	movem.l	l8,-(a7)
+F00:0020       	move.w	_camera,d0
+               S01:00000014:  30 39 00 00 00 00 [R]
+F00:0021       l8	reg
+F00:0022       	unlk	a5
+               S01:0000001A:  4E 5D
+F00:0023       	rts
+               S01:0000001C:  4E 75
+F00:0024       ; stacksize=0
+F00:0025       	opt o+,ol+,op+,oc+,ot+,oj+,ob+,om+
+F00:0026       	public	_getCameraY
+F00:0027       	cnop	0,4
+F00:0028       _getCameraY
+F00:0029       	link.w	a5,#0
+               S01:00000020:  4E 55 00 00
+F00:0030       	movem.l	l13,-(a7)
+F00:0031       	move.w	2+_camera,d0
+               S01:00000024:  30 39 00 00 00 02 [R]
+F00:0032       l13	reg
+F00:0033       	unlk	a5
+               S01:0000002A:  4E 5D
+F00:0034       	rts
+               S01:0000002C:  4E 75
+F00:0035       ; stacksize=0
+F00:0036       	opt o+,ol+,op+,oc+,ot+,oj+,ob+,om+
+F00:0037       	public	_setCameraX
+F00:0038       	cnop	0,4
+F00:0039       _setCameraX
+F00:0040       	link.w	a5,#0
+               S01:00000030:  4E 55 00 00
+F00:0041       	movem.l	l18,-(a7)
+F00:0042       	move.w	(10,a5),_camera
+               S01:00000034:  33 ED 00 0A 00 00 00 00 [R]
+F00:0043       l18	reg
+F00:0044       	unlk	a5
+               S01:0000003C:  4E 5D
+F00:0045       	rts
+               S01:0000003E:  4E 75
+F00:0046       ; stacksize=0
+F00:0047       	opt o+,ol+,op+,oc+,ot+,oj+,ob+,om+
+F00:0048       	public	_setCameraY
+F00:0049       	cnop	0,4
+F00:0050       _setCameraY
+F00:0051       	link.w	a5,#0
+               S01:00000040:  4E 55 00 00
+F00:0052       	movem.l	l23,-(a7)
+F00:0053       	move.w	(10,a5),2+_camera
+               S01:00000044:  33 ED 00 0A 00 00 00 02 [R]
+F00:0054       l23	reg
+F00:0055       	unlk	a5
+               S01:0000004C:  4E 5D
+F00:0056       	rts
+               S01:0000004E:  4E 75
+F00:0057       ; stacksize=0
+F00:0058       	public	_camera
+F00:0059       	section	"BSS",bss
+F00:0060       	cnop	0,4
+F00:0061       _camera
+F00:0062       	ds.b	4
+F00:0063       
+
+
+Sections:
+S01  CODE
+S02  BSS
+
+
+Sources:
+F00  camera.asm
+
+
+Symbols:
+l23 EXPR(0=0x0) EQU REGL 
+_setCameraY LAB (0x40) UNUSED EXPORT sec=CODE 
+l18 EXPR(0=0x0) EQU REGL 
+_setCameraX LAB (0x30) UNUSED EXPORT sec=CODE 
+l13 EXPR(0=0x0) EQU REGL 
+_getCameraY LAB (0x20) UNUSED EXPORT sec=CODE 
+l8 EXPR(0=0x0) EQU REGL 
+_getCameraX LAB (0x10) UNUSED EXPORT sec=CODE 
+_camera LAB (0x0) EXPORT REF sec=BSS 
+l3 EXPR(0=0x0) EQU REGL 
+_initCamera LAB (0x0) UNUSED EXPORT sec=CODE 
+_MOVEMBYTES EXPR(complex expression) INTERNAL 
+ MOVEMSIZE EXPR(4=0x4) INTERNAL 
+_MOVEMREGS EXPR(0=0x0) INTERNAL 
+__LINE__ EXPR(63=0x3f) INTERNAL 
+__FO EXPR(0=0x0) INTERNAL 
+__RS EXPR(0=0x0) INTERNAL 
+REPTN EXPR(-1=0xffffffff) INTERNAL 
+__VASM EXPR(1=0x1) INTERNAL 
+__UNIXFS EXPR(0=0x0) INTERNAL 
+
+There have been no errors.

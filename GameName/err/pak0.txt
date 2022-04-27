@@ -1,0 +1,53 @@
+F00:0001       ;===============================================================================
+F00:0002       ;pak0.asm
+F00:0003       ;===============================================================================
+F00:0004       ;DO NOT MODIFY THIS FILE!!!!!!
+F00:0005       ;unless you want to change the .pak file to a different name
+F00:0006       ;-------------------------------------------------------------------------------
+F00:0007       
+F00:0008       ;///////////////////////////////////////////////////////////////////////////////
+F00:0009       	section	"BSS",bss
+F00:0010       ;///////////////////////////////////////////////////////////////////////////////
+F00:0011       	section	"DATA",data
+F00:0012       	public	_pak0
+F00:0013       _pak0:	incbin	"src\pak0.pak"
+               S02:00000000:  50 41 43 4B F8 59 00 00 80 05 00 00 69 74 27 73
+               S02:00000010:  20 62 65 65 6E 20 61 20 77 68 69 6C 65 2C 20 69
+F00:0014       	even
+F00:0015       ;///////////////////////////////////////////////////////////////////////////////
+F00:0016       	section	"CODE",code
+F00:0017       
+F00:0018       ;---------------------------------------
+F00:0019       ;Function Name
+F00:0020       ;
+F00:0021       ;Description
+F00:0022       ;
+F00:0023       ;Calling Convention
+F00:0024       ;
+F00:0025       ;---------------------------------------
+F00:0026       
+
+
+Sections:
+S01  BSS
+S02  DATA
+S03  CODE
+
+
+Sources:
+F00  pak0.asm
+
+
+Symbols:
+_pak0 LAB (0x0) UNUSED EXPORT sec=DATA 
+_MOVEMBYTES EXPR(0=0x0) INTERNAL 
+ MOVEMSIZE EXPR(0=0x0) INTERNAL 
+_MOVEMREGS EXPR(0=0x0) INTERNAL 
+__LINE__ EXPR(26=0x1a) INTERNAL 
+__FO EXPR(0=0x0) INTERNAL 
+__RS EXPR(0=0x0) INTERNAL 
+REPTN EXPR(-1=0xffffffff) INTERNAL 
+__VASM EXPR(1=0x1) INTERNAL 
+__UNIXFS EXPR(0=0x0) INTERNAL 
+
+There have been no errors.

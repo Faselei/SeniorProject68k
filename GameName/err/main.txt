@@ -1,0 +1,134 @@
+F00:0001       	idnt	"src/main.c"
+F00:0002       	opt o+,ol+,op+,oc+,ot+,oj+,ob+,om+
+F00:0003       	section	"CODE",code
+F00:0004       	public	_main
+F00:0005       	cnop	0,4
+F00:0006       _main
+F00:0007       	link.w	a5,#0
+               S01:00000000:  4E 55 00 00
+F00:0008       	movem.l	l8,-(a7)
+               S01:00000004:  48 E7 30 00
+F00:0009       	moveq	#1,d3
+               S01:00000008:  76 01
+F00:0010       	move.l	#16384,d2
+               S01:0000000A:  24 3C 00 00 40 00
+F00:0011       	jsr	_initSegaGenesis
+               S01:00000010:  4E B9 00 00 00 00 [R]
+F00:0012       	jsr	_initGame
+               S01:00000016:  4E B9 00 00 00 00 [R]
+F00:0013       	jsr	_initStatusBar
+               S01:0000001C:  4E B9 00 00 00 00 [R]
+F00:0014       	move.l	#0,_fixedNum
+               S01:00000022:  42 B9 00 00 00 04 [R]
+F00:0015       l6
+F00:0016       	move.w	16+_actors,d1
+               S01:00000028:  32 39 00 00 00 10 [R]
+F00:0017       	ext.l	d1
+               S01:0000002E:  48 C1
+F00:0018       	moveq	#16,d0
+               S01:00000030:  70 10
+F00:0019       	lsl.l	d0,d1
+               S01:00000032:  E1 A9
+F00:0020       	move.w	14+_actors,d0
+               S01:00000034:  30 39 00 00 00 0E [R]
+F00:0021       	ext.l	d0
+               S01:0000003A:  48 C0
+F00:0022       	add.l	d0,d1
+               S01:0000003C:  D2 80
+F00:0023       	move.l	d1,_score
+               S01:0000003E:  23 C1 00 00 00 00 [R]
+F00:0024       	jsr	_updateActors
+               S01:00000044:  4E B9 00 00 00 00 [R]
+F00:0025       	add.l	d2,_fixedNum
+               S01:0000004A:  D5 B9 00 00 00 04 [R]
+F00:0026       	moveq	#16,d1
+               S01:00000050:  72 10
+F00:0027       	move.l	_fixedNum,d0
+               S01:00000052:  20 39 00 00 00 04 [R]
+F00:0028       	asr.l	d1,d0
+               S01:00000058:  E2 A0
+F00:0029       	move.w	d0,_hScroll
+               S01:0000005A:  33 C0 00 00 00 00 [R]
+F00:0030       	moveq	#16,d1
+               S01:00000060:  72 10
+F00:0031       	move.l	_fixedNum,d0
+               S01:00000062:  20 39 00 00 00 04 [R]
+F00:0032       	asr.l	d1,d0
+               S01:00000068:  E2 A0
+F00:0033       	move.w	d0,18+_currentStage
+               S01:0000006A:  33 C0 00 00 00 12 [R]
+F00:0034       	move.b	d3,_runUpdateStatusBar
+               S01:00000070:  13 C3 00 00 00 00 [R]
+F00:0035       	jsr	_updateStatusBar
+               S01:00000076:  4E B9 00 00 00 00 [R]
+F00:0036       	jsr	_WaitForVblank
+               S01:0000007C:  4E B9 00 00 00 00 [R]
+F00:0037       	bra	l6
+               S01:00000082:  60 A4
+F00:0038       l8	reg	d2/d3
+F00:0039       	movem.l	(a7)+,d2/d3
+               S01:00000084:  4C DF 00 0C
+F00:0040       	unlk	a5
+               S01:00000088:  4E 5D
+F00:0041       	rts
+               S01:0000008A:  4E 75
+F00:0042       	public	_initSegaGenesis
+F00:0043       	public	_hScroll
+F00:0044       	public	_WaitForVblank
+F00:0045       	public	_actors
+F00:0046       	public	_updateActors
+F00:0047       	public	_currentStage
+F00:0048       	public	_initStatusBar
+F00:0049       	public	_updateStatusBar
+F00:0050       	public	_score
+F00:0051       	public	_runUpdateStatusBar
+F00:0052       	public	_initGame
+F00:0053       	public	_testColorAlloc
+F00:0054       	section	"BSS",bss
+F00:0055       	cnop	0,4
+F00:0056       _testColorAlloc
+F00:0057       	ds.b	4
+F00:0058       	public	_fixedNum
+F00:0059       	cnop	0,4
+F00:0060       _fixedNum
+F00:0061       	ds.b	4
+F00:0062       
+
+
+Sections:
+S01  CODE
+S02  BSS
+
+
+Sources:
+F00  main.asm
+
+
+Symbols:
+_testColorAlloc LAB (0x0) UNUSED EXPORT sec=BSS 
+_WaitForVblank IMP EXPORT REF 
+_updateStatusBar IMP EXPORT REF 
+_runUpdateStatusBar IMP EXPORT REF 
+_currentStage IMP EXPORT REF 
+_hScroll IMP EXPORT REF 
+_updateActors IMP EXPORT REF 
+_score IMP EXPORT REF 
+_actors IMP EXPORT REF 
+l6 LAB (0x28) sec=CODE 
+_fixedNum LAB (0x4) EXPORT REF sec=BSS 
+_initStatusBar IMP EXPORT REF 
+_initGame IMP EXPORT REF 
+_initSegaGenesis IMP EXPORT REF 
+l8 EXPR(12=0xc) EQU REGL 
+_main LAB (0x0) UNUSED EXPORT sec=CODE 
+_MOVEMBYTES EXPR(8=0x8) INTERNAL 
+ MOVEMSIZE EXPR(4=0x4) INTERNAL 
+_MOVEMREGS EXPR(12=0xc) INTERNAL 
+__LINE__ EXPR(62=0x3e) INTERNAL 
+__FO EXPR(0=0x0) INTERNAL 
+__RS EXPR(0=0x0) INTERNAL 
+REPTN EXPR(-1=0xffffffff) INTERNAL 
+__VASM EXPR(1=0x1) INTERNAL 
+__UNIXFS EXPR(0=0x0) INTERNAL 
+
+There have been no errors.

@@ -1,0 +1,294 @@
+F00:0001       	idnt	"src/init.c"
+F00:0002       	opt o+,ol+,op+,oc+,ot+,oj+,ob+,om+
+F00:0003       	section	"CODE",code
+F00:0004       	public	_initGame
+F00:0005       	cnop	0,4
+F00:0006       _initGame
+F00:0007       	link.w	a5,#0
+               S01:00000000:  4E 55 00 00
+F00:0008       	movem.l	l5,-(a7)
+               S01:00000004:  2F 02
+F00:0009       	moveq	#2,d2
+               S01:00000006:  74 02
+F00:0010       	move.l	#3,-(a7)
+               S01:00000008:  48 78 00 03
+F00:0011       	jsr	_VDP_Enable
+               S01:0000000C:  4E B9 00 00 00 00 [R]
+F00:0012       	move.l	#1,-(a7)
+               S01:00000012:  48 78 00 01
+F00:0013       	jsr	_VDP_SetVideoRegion
+               S01:00000016:  4E B9 00 00 00 00 [R]
+F00:0014       	move.l	#0,-(a7)
+               S01:0000001C:  42 A7
+F00:0015       	jsr	_VDP_SetScreenWidth
+               S01:0000001E:  4E B9 00 00 00 00 [R]
+F00:0016       	move.l	#16,-(a7)
+               S01:00000024:  48 78 00 10
+F00:0017       	jsr	_VDP_AllocVram
+               S01:00000028:  4E B9 00 00 00 00 [R]
+F00:0018       	move.l	d0,_tilePtr
+               S01:0000002E:  23 C0 00 00 00 04 [R]
+F00:0019       	move.l	#16,-(a7)
+               S01:00000034:  48 78 00 10
+F00:0020       	jsr	_VDP_AllocVram
+               S01:00000038:  4E B9 00 00 00 00 [R]
+F00:0021       	move.l	d0,_tile2Ptr
+               S01:0000003E:  23 C0 00 00 00 08 [R]
+F00:0022       	move.l	#128,-(a7)
+               S01:00000044:  48 78 00 80
+F00:0023       	jsr	_VDP_AllocVram
+               S01:00000048:  4E B9 00 00 00 00 [R]
+F00:0024       	move.l	d0,_tile3Ptr
+               S01:0000004E:  23 C0 00 00 00 0C [R]
+F00:0025       	move.l	_tile2Ptr,-(a7)
+               S01:00000054:  2F 39 00 00 00 08 [R]
+F00:0026       	jsr	_VDP_FreeVram
+               S01:0000005A:  4E B9 00 00 00 00 [R]
+F00:0027       	pea	l3
+               S01:00000060:  48 7A 00 D2
+F00:0028       	jsr	_fopen
+               S01:00000064:  4E B9 00 00 00 00 [R]
+F00:0029       	move.l	d0,_file
+               S01:0000006A:  23 C0 00 00 00 00 [R]
+F00:0030       	move.l	d2,-(a7)
+               S01:00000070:  2F 02
+F00:0031       	move.l	_file,a0
+               S01:00000072:  20 79 00 00 00 00 [R]
+F00:0032       	move.l	(a0),-(a7)
+               S01:00000078:  2F 10
+F00:0033       	move.l	_file,a0
+               S01:0000007A:  20 79 00 00 00 00 [R]
+F00:0034       	move.l	(4,a0),-(a7)
+               S01:00000080:  2F 28 00 04
+F00:0035       	move.l	_tile3Ptr,a0
+               S01:00000084:  20 79 00 00 00 0C [R]
+F00:0036       	moveq	#0,d0
+               S01:0000008A:  70 00
+F00:0037       	move.w	(0,a0,d2.l),d0
+               S01:0000008C:  30 30 28 00
+F00:0038       	move.l	d0,a0
+               S01:00000090:  20 40
+F00:0039       	move.l	a0,-(a7)
+               S01:00000092:  2F 08
+F00:0040       	jsr	_DMA_MemoryToVram
+               S01:00000094:  4E B9 00 00 00 00 [R]
+F00:0041       	move.l	_file,-(a7)
+               S01:0000009A:  2F 39 00 00 00 00 [R]
+F00:0042       	jsr	_fclose
+               S01:000000A0:  4E B9 00 00 00 00 [R]
+F00:0043       	pea	l4
+               S01:000000A6:  48 7A 00 A0
+F00:0044       	jsr	_fopen
+               S01:000000AA:  4E B9 00 00 00 00 [R]
+F00:0045       	move.l	d0,_file
+               S01:000000B0:  23 C0 00 00 00 00 [R]
+F00:0046       	move.l	d2,-(a7)
+               S01:000000B6:  2F 02
+F00:0047       	move.l	_file,a0
+               S01:000000B8:  20 79 00 00 00 00 [R]
+F00:0048       	move.l	(a0),-(a7)
+               S01:000000BE:  2F 10
+F00:0049       	move.l	_file,a0
+               S01:000000C0:  20 79 00 00 00 00 [R]
+F00:0050       	move.l	(4,a0),-(a7)
+               S01:000000C6:  2F 28 00 04
+F00:0051       	move.l	_tilePtr,a0
+               S01:000000CA:  20 79 00 00 00 04 [R]
+F00:0052       	moveq	#0,d0
+               S01:000000D0:  70 00
+F00:0053       	move.w	(0,a0,d2.l),d0
+               S01:000000D2:  30 30 28 00
+F00:0054       	move.l	d0,a0
+               S01:000000D6:  20 40
+F00:0055       	move.l	a0,-(a7)
+               S01:000000D8:  2F 08
+F00:0056       	jsr	_DMA_MemoryToVram
+               S01:000000DA:  4E B9 00 00 00 00 [R]
+F00:0057       	move.l	_file,-(a7)
+               S01:000000E0:  2F 39 00 00 00 00 [R]
+F00:0058       	jsr	_fclose
+               S01:000000E6:  4E B9 00 00 00 00 [R]
+F00:0059       	jsr	_initActorSubsystem
+               S01:000000EC:  4E B9 00 00 00 00 [R]
+F00:0060       	jsr	_VDP_StartCPUHandshake
+               S01:000000F2:  4E B9 00 00 00 00 [R]
+F00:0061       	jsr	_VDP_CommitColorBuffer
+               S01:000000F8:  4E B9 00 00 00 00 [R]
+F00:0062       	jsr	_VDP_CommitVSRAMBuffer
+               S01:000000FE:  4E B9 00 00 00 00 [R]
+F00:0063       	jsr	_initCamera
+               S01:00000104:  4E B9 00 00 00 00 [R]
+F00:0064       	jsr	_LoadBackground
+               S01:0000010A:  4E B9 00 00 00 00 [R]
+F00:0065       	jsr	_loadForground
+               S01:00000110:  4E B9 00 00 00 00 [R]
+F00:0066       	jsr	_spawnKnightSprite
+               S01:00000116:  4E B9 00 00 00 00 [R]
+F00:0067       	move.l	d2,-(a7)
+               S01:0000011C:  2F 02
+F00:0068       	jsr	_VDP_Enable
+               S01:0000011E:  4E B9 00 00 00 00 [R]
+F00:0069       	jsr	_WaitForVblank
+               S01:00000124:  4E B9 00 00 00 00 [R]
+F00:0070       	add.w	#80,a7
+               S01:0000012A:  4F EF 00 50
+F00:0071       l5	reg	d2
+F00:0072       	movem.l	(a7)+,d2
+               S01:0000012E:  24 1F
+F00:0073       	unlk	a5
+               S01:00000130:  4E 5D
+F00:0074       	rts
+               S01:00000132:  4E 75
+F00:0075       	cnop	0,4
+F00:0076       l3
+F00:0077       	dc.b	118
+               S01:00000134:  76
+F00:0078       	dc.b	101
+               S01:00000135:  65
+F00:0079       	dc.b	110
+               S01:00000136:  6E
+F00:0080       	dc.b	116
+               S01:00000137:  74
+F00:0081       	dc.b	117
+               S01:00000138:  75
+F00:0082       	dc.b	114
+               S01:00000139:  72
+F00:0083       	dc.b	101
+               S01:0000013A:  65
+F00:0084       	dc.b	65
+               S01:0000013B:  41
+F00:0085       	dc.b	115
+               S01:0000013C:  73
+F00:0086       	dc.b	99
+               S01:0000013D:  63
+F00:0087       	dc.b	105
+               S01:0000013E:  69
+F00:0088       	dc.b	105
+               S01:0000013F:  69
+F00:0089       	dc.b	46
+               S01:00000140:  2E
+F00:0090       	dc.b	98
+               S01:00000141:  62
+F00:0091       	dc.b	105
+               S01:00000142:  69
+F00:0092       	dc.b	110
+               S01:00000143:  6E
+F00:0093       	dc.b	0
+               S01:00000144:  00
+F00:0094       	cnop	0,4
+F00:0095       l4
+F00:0096       	dc.b	83
+               S01:00000148:  53
+F00:0097       	dc.b	111
+               S01:00000149:  6F
+F00:0098       	dc.b	108
+               S01:0000014A:  6C
+F00:0099       	dc.b	105
+               S01:0000014B:  69
+F00:0100       	dc.b	100
+               S01:0000014C:  64
+F00:0101       	dc.b	67
+               S01:0000014D:  43
+F00:0102       	dc.b	111
+               S01:0000014E:  6F
+F00:0103       	dc.b	108
+               S01:0000014F:  6C
+F00:0104       	dc.b	111
+               S01:00000150:  6F
+F00:0105       	dc.b	114
+               S01:00000151:  72
+F00:0106       	dc.b	115
+               S01:00000152:  73
+F00:0107       	dc.b	46
+               S01:00000153:  2E
+F00:0108       	dc.b	98
+               S01:00000154:  62
+F00:0109       	dc.b	105
+               S01:00000155:  69
+F00:0110       	dc.b	110
+               S01:00000156:  6E
+F00:0111       	dc.b	0
+               S01:00000157:  00
+F00:0112       	public	_VDP_Enable
+F00:0113       	public	_VDP_SetVideoRegion
+F00:0114       	public	_VDP_SetScreenWidth
+F00:0115       	public	_VDP_StartCPUHandshake
+F00:0116       	public	_VDP_AllocVram
+F00:0117       	public	_VDP_FreeVram
+F00:0118       	public	_VDP_CommitColorBuffer
+F00:0119       	public	_VDP_CommitVSRAMBuffer
+F00:0120       	public	_fopen
+F00:0121       	public	_fclose
+F00:0122       	public	_DMA_MemoryToVram
+F00:0123       	public	_initActorSubsystem
+F00:0124       	public	_WaitForVblank
+F00:0125       	public	_initCamera
+F00:0126       	public	_spawnKnightSprite
+F00:0127       	public	_LoadBackground
+F00:0128       	public	_loadForground
+F00:0129       	public	_file
+F00:0130       	section	"BSS",bss
+F00:0131       	cnop	0,4
+F00:0132       _file
+F00:0133       	ds.b	4
+F00:0134       	public	_tilePtr
+F00:0135       	cnop	0,4
+F00:0136       _tilePtr
+F00:0137       	ds.b	4
+F00:0138       	public	_tile2Ptr
+F00:0139       	cnop	0,4
+F00:0140       _tile2Ptr
+F00:0141       	ds.b	4
+F00:0142       	public	_tile3Ptr
+F00:0143       	cnop	0,4
+F00:0144       _tile3Ptr
+F00:0145       	ds.b	4
+F00:0146       
+
+
+Sections:
+S01  CODE
+S02  BSS
+
+
+Sources:
+F00  init.asm
+
+
+Symbols:
+_WaitForVblank IMP EXPORT REF 
+_spawnKnightSprite IMP EXPORT REF 
+_loadForground IMP EXPORT REF 
+_LoadBackground IMP EXPORT REF 
+_initCamera IMP EXPORT REF 
+_VDP_CommitVSRAMBuffer IMP EXPORT REF 
+_VDP_CommitColorBuffer IMP EXPORT REF 
+_VDP_StartCPUHandshake IMP EXPORT REF 
+_initActorSubsystem IMP EXPORT REF 
+l4 LAB (0x148) sec=CODE 
+_fclose IMP EXPORT REF 
+_DMA_MemoryToVram IMP EXPORT REF 
+_file LAB (0x0) EXPORT REF sec=BSS 
+_fopen IMP EXPORT REF 
+l3 LAB (0x134) sec=CODE 
+_VDP_FreeVram IMP EXPORT REF 
+_tile3Ptr LAB (0xc) EXPORT REF sec=BSS 
+_tile2Ptr LAB (0x8) EXPORT REF sec=BSS 
+_tilePtr LAB (0x4) EXPORT REF sec=BSS 
+_VDP_AllocVram IMP EXPORT REF 
+_VDP_SetScreenWidth IMP EXPORT REF 
+_VDP_SetVideoRegion IMP EXPORT REF 
+_VDP_Enable IMP EXPORT REF 
+l5 EXPR(4=0x4) EQU REGL 
+_initGame LAB (0x0) UNUSED EXPORT sec=CODE 
+_MOVEMBYTES EXPR(4=0x4) INTERNAL 
+ MOVEMSIZE EXPR(4=0x4) INTERNAL 
+_MOVEMREGS EXPR(4=0x4) INTERNAL 
+__LINE__ EXPR(146=0x92) INTERNAL 
+__FO EXPR(0=0x0) INTERNAL 
+__RS EXPR(0=0x0) INTERNAL 
+REPTN EXPR(-1=0xffffffff) INTERNAL 
+__VASM EXPR(1=0x1) INTERNAL 
+__UNIXFS EXPR(0=0x0) INTERNAL 
+
+There have been no errors.

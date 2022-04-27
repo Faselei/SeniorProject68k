@@ -1,0 +1,107 @@
+F00:0001       	idnt	"src/SystemCtrl.c"
+F00:0002       	opt o+,ol+,op+,oc+,ot+,oj+,ob+,om+
+F00:0003       	section	"CODE",code
+F00:0004       	public	_WaitForVblank
+F00:0005       	cnop	0,4
+F00:0006       _WaitForVblank
+F00:0007       	link.w	a5,#0
+               S01:00000000:  4E 55 00 00
+F00:0008       	movem.l	l8,-(a7)
+F00:0009       	move.l	_clock,a0
+               S01:00000004:  20 79 00 00 00 00 [R]
+F00:0010       	cmp.l	_clock,a0
+               S01:0000000A:  B1 F9 00 00 00 00 [R]
+F00:0011       	bne	l7
+               S01:00000010:  66 08
+F00:0012       l6
+F00:0013       	cmp.l	_clock,a0
+               S01:00000012:  B1 F9 00 00 00 00 [R]
+F00:0014       	beq	l6
+               S01:00000018:  67 F8
+F00:0015       l7
+F00:0016       l8	reg
+F00:0017       	unlk	a5
+               S01:0000001A:  4E 5D
+F00:0018       	rts
+               S01:0000001C:  4E 75
+F00:0019       ; stacksize=0
+F00:0020       	opt o+,ol+,op+,oc+,ot+,oj+,ob+,om+
+F00:0021       	public	_Panic
+F00:0022       	cnop	0,4
+F00:0023       _Panic
+F00:0024       	link.w	a5,#0
+               S01:00000020:  4E 55 00 00
+F00:0025       	movem.l	l23,-(a7)
+F00:0026       l21
+F00:0027       	bra	l21
+               S01:00000024:  60 FE
+F00:0028       l23	reg
+F00:0029       	unlk	a5
+               S01:00000026:  4E 5D
+F00:0030       	rts
+               S01:00000028:  4E 75
+F00:0031       ; stacksize=0
+F00:0032       	opt o+,ol+,op+,oc+,ot+,oj+,ob+,om+
+F00:0033       	public	_disableCPUInterrupts
+F00:0034       	cnop	0,4
+F00:0035       _disableCPUInterrupts
+F00:0036       	link.w	a5,#0
+               S01:0000002C:  4E 55 00 00
+F00:0037       	movem.l	l32,-(a7)
+F00:0038       	move	#$2700,sr
+               S01:00000030:  46 FC 27 00
+F00:0039       l32	reg
+F00:0040       	unlk	a5
+               S01:00000034:  4E 5D
+F00:0041       	rts
+               S01:00000036:  4E 75
+F00:0042       	opt o+,ol+,op+,oc+,ot+,oj+,ob+,om+
+F00:0043       	public	_enableCPUInterrupts
+F00:0044       	cnop	0,4
+F00:0045       _enableCPUInterrupts
+F00:0046       	link.w	a5,#0
+               S01:00000038:  4E 55 00 00
+F00:0047       	movem.l	l41,-(a7)
+F00:0048       	move	#$2500,sr
+               S01:0000003C:  46 FC 25 00
+F00:0049       l41	reg
+F00:0050       	unlk	a5
+               S01:00000040:  4E 5D
+F00:0051       	rts
+               S01:00000042:  4E 75
+F00:0052       	public	_clock
+F00:0053       
+
+
+Sections:
+S01  CODE
+
+
+Sources:
+F00  SystemCtrl.asm
+
+
+Symbols:
+l41 EXPR(0=0x0) EQU REGL 
+_enableCPUInterrupts LAB (0x38) UNUSED EXPORT sec=CODE 
+l32 EXPR(0=0x0) EQU REGL 
+_disableCPUInterrupts LAB (0x2c) UNUSED EXPORT sec=CODE 
+l21 LAB (0x24) sec=CODE 
+l23 EXPR(0=0x0) EQU REGL 
+_Panic LAB (0x20) UNUSED EXPORT sec=CODE 
+l6 LAB (0x12) sec=CODE 
+l7 LAB (0x1a) sec=CODE 
+_clock IMP EXPORT REF 
+l8 EXPR(0=0x0) EQU REGL 
+_WaitForVblank LAB (0x0) UNUSED EXPORT sec=CODE 
+_MOVEMBYTES EXPR(complex expression) INTERNAL 
+ MOVEMSIZE EXPR(4=0x4) INTERNAL 
+_MOVEMREGS EXPR(0=0x0) INTERNAL 
+__LINE__ EXPR(53=0x35) INTERNAL 
+__FO EXPR(0=0x0) INTERNAL 
+__RS EXPR(0=0x0) INTERNAL 
+REPTN EXPR(-1=0xffffffff) INTERNAL 
+__VASM EXPR(1=0x1) INTERNAL 
+__UNIXFS EXPR(0=0x0) INTERNAL 
+
+There have been no errors.

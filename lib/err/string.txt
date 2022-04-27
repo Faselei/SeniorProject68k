@@ -1,0 +1,779 @@
+F00:0001       ;===============================================================================
+F00:0002       ;string.asm
+F00:0003       ;===============================================================================
+F00:0004       ;
+F00:0005       ;-------------------------------------------------------------------------------
+F00:0006       
+F00:0007       ;///////////////////////////////////////////////////////////////////////////////
+F00:0008       	section	"BSS",bss
+F00:0009       
+F00:0010       ;strtok static
+F00:0011       strtokPtr	ds.l	1
+F00:0012       ;///////////////////////////////////////////////////////////////////////////////
+F00:0013       	section	"DATA",data
+F00:0014       ;///////////////////////////////////////////////////////////////////////////////
+F00:0015       	section	"CODE",code
+F00:0016       
+F00:0017       ;---------------------------------------
+F00:0018       ;memchr
+F00:0019       ;
+F00:0020       ;finds a character c in the first n bytes
+F00:0021       ;of memory pointed by str.
+F00:0022       ;
+F00:0023       ;Calling Convention
+F00:0024       ;	move.l	#n,-(sp)
+F00:0025       ;	move.l	#c,-(sp)
+F00:0026       ;	pea	_string
+F00:0027       ;	bsr	_memchr
+F00:0028       ;	add.w	#12,sp
+F00:0029       ;result D0 = null or pointer to location in string
+F00:0030       ;---------------------------------------
+F00:0031       ;d0 = c
+F00:0032       ;d1 = n
+F00:0033       ;a0 = pointer to string
+F00:0034       ;
+F00:0035       	public	_memchr
+F00:0036       _memchr:
+F00:0037       	link	a5,#0
+               S03:00000000:  4E 55 00 00
+F00:0038       
+F00:0039       	move.l	(8,a5),a0	;string
+               S03:00000004:  20 6D 00 08
+F00:0040       	move.l	(12,a5),d0	;character c
+               S03:00000008:  20 2D 00 0C
+F00:0041       	move.l	(16,a5),d1	;number n
+               S03:0000000C:  22 2D 00 10
+F00:0042       	bra	.enter		;start loop
+               S03:00000010:  60 0A
+F00:0043       
+F00:0044       .loop:	cmp.b	(a0)+,d0	;does the data match the character we want?
+               S03:00000012:  B0 18
+F00:0045       	bne	.enter		;no: skip
+               S03:00000014:  66 06
+F00:0046       	subq	#1,a0		;yes: return *str - 1
+               S03:00000016:  53 48
+F00:0047       	move.l	a0,d0
+               S03:00000018:  20 08
+F00:0048       	bra	.exit
+               S03:0000001A:  60 06
+F00:0049       
+F00:0050       .enter:	dbra	d1,.loop	;no: loop
+               S03:0000001C:  51 C9 FF F4
+F00:0051       	moveq	#0,d0		;yes: return 0
+               S03:00000020:  70 00
+F00:0052       .exit:	unlk	a5
+               S03:00000022:  4E 5D
+F00:0053       	rts
+               S03:00000024:  4E 75
+F00:0054       
+F00:0055       ;---------------------------------------
+F00:0056       ;memcmp
+F00:0057       ;
+F00:0058       ;compares the first n bytes of the 2 strings
+F00:0059       ;
+F00:0060       ;Calling Convention
+F00:0061       ;	move.l	#n,-(sp)
+F00:0062       ;	pea	string2
+F00:0063       ;	pea	string1
+F00:0064       ;	bsr	_memcmp
+F00:0065       ;	add.w	#12,sp
+F00:0066       ;result D0:
+F00:0067       ;	 0 = strings are the same
+F00:0068       ;	+# = string1 > string2
+F00:0069       ;	-# = string1 < string2
+F00:0070       ;---------------------------------------
+F00:0071       ;d0 = result
+F00:0072       ;d1 = n
+F00:0073       ;a0 = string1
+F00:0074       ;a1 = string2
+F00:0075       ;
+F00:0076       	public	_memcmp
+F00:0077       _memcmp:
+F00:0078       	link	a5,#0
+               S03:00000026:  4E 55 00 00
+F00:0079       	move.l	(16,a5),d1	;n
+               S03:0000002A:  22 2D 00 10
+F00:0080       	move.l	(12,a5),a1	;string2
+               S03:0000002E:  22 6D 00 0C
+F00:0081       	move.l	(8,a5),a0	;string1
+               S03:00000032:  20 6D 00 08
+F00:0082       	moveq	#0,d0
+               S03:00000036:  70 00
+F00:0083       	bra	.enter
+               S03:00000038:  60 06
+F00:0084       .loop:	move.b	(a0)+,d0	;load next character
+               S03:0000003A:  10 18
+F00:0085       	sub.b	(a1)+,d0	;equal?
+               S03:0000003C:  90 19
+F00:0086       	bne	.exit		;no: exit
+               S03:0000003E:  66 04
+F00:0087       .enter:	dbra	d1,.loop	;yes: n--, n = -1? no: goto loop
+               S03:00000040:  51 C9 FF F8
+F00:0088       .exit:	unlk	a5
+               S03:00000044:  4E 5D
+F00:0089       	rts
+               S03:00000046:  4E 75
+F00:0090       
+F00:0091       ;---------------------------------------
+F00:0092       ;memcpy
+F00:0093       ;
+F00:0094       ;Copy 1 area of memory to anouther
+F00:0095       ;
+F00:0096       ;Calling Convention
+F00:0097       ;	move.l	#n,-(sp)
+F00:0098       ;	pea	src
+F00:0099       ;	pea	dest
+F00:0100       ;	bsr	_memcpy
+F00:0101       ;	add.w	#12,sp
+F00:0102       ;
+F00:0103       ;result D0:
+F00:0104       ;This function returns a pointer to
+F00:0105       ;the destination, which is dest
+F00:0106       ;---------------------------------------
+F00:0107       	public	_memcpy
+F00:0108       _memcpy:
+F00:0109       	link	a5,#0
+               S03:00000048:  4E 55 00 00
+F00:0110       
+F00:0111       	move.l	(8,a5),a1	;dest
+               S03:0000004C:  22 6D 00 08
+F00:0112       	move.l	(12,a5),a0	;src
+               S03:00000050:  20 6D 00 0C
+F00:0113       	move.l	(16,a5),d0	;size n
+               S03:00000054:  20 2D 00 10
+F00:0114       	bra	.enter
+               S03:00000058:  60 02
+F00:0115       .loop:	move.b	(a0)+,(a1)+
+               S03:0000005A:  12 D8
+F00:0116       .enter:	dbra	d0,.loop
+               S03:0000005C:  51 C8 FF FC
+F00:0117       	move.l	(8,a5),d0
+               S03:00000060:  20 2D 00 08
+F00:0118       	unlk	a5
+               S03:00000064:  4E 5D
+F00:0119       	rts
+               S03:00000066:  4E 75
+F00:0120       
+F00:0121       ;---------------------------------------
+F00:0122       ;memset
+F00:0123       ;
+F00:0124       ;Fill a region of memory with the given value
+F00:0125       ;
+F00:0126       ;	move.l	#count,-(sp)
+F00:0127       ;	move.l	#c,-(sp)
+F00:0128       ;	pea	str
+F00:0129       ;	bsr	_memset
+F00:0130       ;	add.w	#12,sp
+F00:0131       ;---------------------------------------
+F00:0132       	public	_memset
+F00:0133       _memset:
+F00:0134       	link	a5,#0
+               S03:00000068:  4E 55 00 00
+F00:0135       	move.l	(8,a5),a0	;str
+               S03:0000006C:  20 6D 00 08
+F00:0136       	move.l	(12,a5),d0	;c
+               S03:00000070:  20 2D 00 0C
+F00:0137       	move.l	(16,a5),d1	;count
+               S03:00000074:  22 2D 00 10
+F00:0138       	bra	.enter
+               S03:00000078:  60 02
+F00:0139       .loop:	move.b	d0,(a0)+
+               S03:0000007A:  10 C0
+F00:0140       .enter:	dbra	d1,.loop
+               S03:0000007C:  51 C9 FF FC
+F00:0141       	move.l	(8,a5),d0
+               S03:00000080:  20 2D 00 08
+F00:0142       	unlk	a5
+               S03:00000084:  4E 5D
+F00:0143       	rts
+               S03:00000086:  4E 75
+F00:0144       
+F00:0145       ;---------------------------------------
+F00:0146       ;strlen
+F00:0147       ;
+F00:0148       ;Computes the length of the string str
+F00:0149       ;up to but not including the terminating null character.
+F00:0150       ;
+F00:0151       ;Calling Convention
+F00:0152       ;	pea	str
+F00:0153       ;	bsr	_strlen
+F00:0154       ;	addq	#4,sp
+F00:0155       ;---------------------------------------
+F00:0156       	public	_strlen
+F00:0157       _strlen:
+F00:0158       	link	a5,#0
+               S03:00000088:  4E 55 00 00
+F00:0159       	move.l	(8,a5),a0
+               S03:0000008C:  20 6D 00 08
+F00:0160       	moveq	#0,d0
+               S03:00000090:  70 00
+F00:0161       	bra	.enter
+               S03:00000092:  60 02
+F00:0162       .loop:	addq	#1,d0
+               S03:00000094:  52 40
+F00:0163       .enter:	tst.b	(a0)+
+               S03:00000096:  4A 18
+F00:0164       	bne	.loop
+               S03:00000098:  66 FA
+F00:0165       	unlk	a5
+               S03:0000009A:  4E 5D
+F00:0166       	rts
+               S03:0000009C:  4E 75
+F00:0167       
+F00:0168       ;---------------------------------------
+F00:0169       ;strcat
+F00:0170       ;
+F00:0171       ;Appends the string pointed to, by src to
+F00:0172       ;the end of the string pointed to by dest.
+F00:0173       ;
+F00:0174       ;Calling Convention
+F00:0175       ;	pea	src
+F00:0176       ;	pea	dest
+F00:0177       ;	bsr	_strcat
+F00:0178       ;	addq	#8,sp
+F00:0179       ;
+F00:0180       ;RETURNS:
+F00:0181       ;This function returns a pointer to the resulting string dest.
+F00:0182       ;---------------------------------------
+F00:0183       	public	_strcat
+F00:0184       _strcat:
+F00:0185       	link	a5,#0
+               S03:0000009E:  4E 55 00 00
+F00:0186       
+F00:0187       	move.l	(8,a5),a0	;dest
+               S03:000000A2:  20 6D 00 08
+F00:0188       	move.l	a0,d0
+               S03:000000A6:  20 08
+F00:0189       	move.l	(12,a5),a1	;src
+               S03:000000A8:  22 6D 00 0C
+F00:0190       
+F00:0191       ;find the end of the string
+F00:0192       .loopA:	tst.b	(a0)+
+               S03:000000AC:  4A 18
+F00:0193       	bne	.loopA
+               S03:000000AE:  66 FC
+F00:0194       	subq	#1,a0
+               S03:000000B0:  53 48
+F00:0195       
+F00:0196       .loopB:	move.b	(a1)+,(a0)+
+               S03:000000B2:  10 D9
+F00:0197       	bne	.loopB
+               S03:000000B4:  66 FC
+F00:0198       	unlk	a5
+               S03:000000B6:  4E 5D
+F00:0199       	rts
+               S03:000000B8:  4E 75
+F00:0200       
+F00:0201       ;---------------------------------------
+F00:0202       ;strncat
+F00:0203       ;
+F00:0204       ;Appends the string pointed to, by src
+F00:0205       ;to the end of the string pointed to,
+F00:0206       ;by dest up to n characters long.
+F00:0207       ;
+F00:0208       ;Calling Convention char *strncat(char *dest, const char *src, size_t n)
+F00:0209       ;
+F00:0210       ;	move.l	#n,-(sp)
+F00:0211       ;	pea	src
+F00:0212       ;	pea	dest
+F00:0213       ;	bsr	_strncat
+F00:0214       ;	add.w	#12,sp
+F00:0215       ;
+F00:0216       ;RETURNS:
+F00:0217       ;This function returns a pointer to the resulting string dest.
+F00:0218       ;---------------------------------------
+F00:0219       	public	_strncat
+F00:0220       _strncat:
+F00:0221       	link	a5,#0
+               S03:000000BA:  4E 55 00 00
+F00:0222       
+F00:0223       	move.l	(8,a5),a0	;dest
+               S03:000000BE:  20 6D 00 08
+F00:0224       	move.l	a0,d0
+               S03:000000C2:  20 08
+F00:0225       	move.l	(12,a5),a1	;src
+               S03:000000C4:  22 6D 00 0C
+F00:0226       	move.l	(16,a5),d1	;n
+               S03:000000C8:  22 2D 00 10
+F00:0227       
+F00:0228       ;if n is 0, then we just return
+F00:0229       	tst	d1
+               S03:000000CC:  4A 41
+F00:0230       	beq	.exit
+               S03:000000CE:  67 12
+F00:0231       
+F00:0232       ;find the end of the string
+F00:0233       .loopA:	tst.b	(a0)+
+               S03:000000D0:  4A 18
+F00:0234       	bne	.loopA
+               S03:000000D2:  66 FC
+F00:0235       	subq	#1,a0
+               S03:000000D4:  53 48
+F00:0236       
+F00:0237       .loopB:	move.b	(a1)+,(a0)+
+               S03:000000D6:  10 D9
+F00:0238       	beq	.exit
+               S03:000000D8:  67 08
+F00:0239       	subq	#1,d1
+               S03:000000DA:  53 41
+F00:0240       	bne	.loopB
+               S03:000000DC:  66 F8
+F00:0241       	move.b	#0,(a0)+
+               S03:000000DE:  10 FC 00 00
+F00:0242       
+F00:0243       .exit:	unlk	a5
+               S03:000000E2:  4E 5D
+F00:0244       	rts
+               S03:000000E4:  4E 75
+F00:0245       
+F00:0246       ;---------------------------------------
+F00:0247       ;strchr
+F00:0248       ;
+F00:0249       ;This returns a pointer to the first
+F00:0250       ;occurrence of the character c in the
+F00:0251       ;string str, or NULL if the character
+F00:0252       ;is not found.
+F00:0253       ;
+F00:0254       ;Calling Convention strchr(const char *str, int c);
+F00:0255       ;
+F00:0256       ;	move.l	#c,-(sp)
+F00:0257       ;	pea	str
+F00:0258       ;	bsr	_strchr
+F00:0259       ;	addq	#8,sp
+F00:0260       ;
+F00:0261       ;RETURNS:
+F00:0262       ;pointer to first occurrance or null if
+F00:0263       ;none found.
+F00:0264       ;---------------------------------------
+F00:0265       	public	_strchr
+F00:0266       _strchr:
+F00:0267       	link	a5,#0
+               S03:000000E6:  4E 55 00 00
+F00:0268       
+F00:0269       	move.l	(8,a5),a0
+               S03:000000EA:  20 6D 00 08
+F00:0270       	move.l	(12,a5),d0
+               S03:000000EE:  20 2D 00 0C
+F00:0271       	bra	.enter
+               S03:000000F2:  60 04
+F00:0272       .loop:	cmp.b	(a0)+,d0
+               S03:000000F4:  B0 18
+F00:0273       	beq	.exit
+               S03:000000F6:  67 06
+F00:0274       .enter:	tst.b	(a0)
+               S03:000000F8:  4A 10
+F00:0275       	bne	.loop
+               S03:000000FA:  66 F8
+F00:0276       	move.l	#0,a0
+               S03:000000FC:  91 C8
+F00:0277       .exit:	move.l	a0,d0
+               S03:000000FE:  20 08
+F00:0278       	unlk	a5
+               S03:00000100:  4E 5D
+F00:0279       	rts
+               S03:00000102:  4E 75
+F00:0280       
+F00:0281       ;---------------------------------------
+F00:0282       ;strcmp
+F00:0283       ;
+F00:0284       ;Compares the string pointed to, by
+F00:0285       ;str1 to the string pointed to by str2.
+F00:0286       ;
+F00:0287       ;Calling Convention int strcmp(const char *str1, const char *str2);
+F00:0288       ;	pea	str2
+F00:0289       ;	pea	str1
+F00:0290       ;	bsr	_strcmp
+F00:0291       ;	addq.w	#8,sp
+F00:0292       ;
+F00:0293       ;RETUNRS:
+F00:0294       ;This function return values that are as follows −
+F00:0295       ;if Return value < 0 then it indicates str1 is less than str2.
+F00:0296       ;if Return value > 0 then it indicates str2 is less than str1.
+F00:0297       ;if Return value = 0 then it indicates str1 is equal to str2.
+F00:0298       ;---------------------------------------
+F00:0299       	public	_strcmp
+F00:0300       _strcmp:
+F00:0301       	link	a5,#0
+               S03:00000104:  4E 55 00 00
+F00:0302       
+F00:0303       	move.l	(8,a5),a0	;str1
+               S03:00000108:  20 6D 00 08
+F00:0304       	move.l	(12,a5),a1	;str2
+               S03:0000010C:  22 6D 00 0C
+F00:0305       	moveq	#0,d0
+               S03:00000110:  70 00
+F00:0306       	bra	.enter
+               S03:00000112:  60 0E
+F00:0307       
+F00:0308       .loop:	cmp.b	(a0)+,(a1)+
+               S03:00000114:  B3 08
+F00:0309       	beq	.enter
+               S03:00000116:  67 0A
+F00:0310       	bcs	.lower
+               S03:00000118:  65 04
+F00:0311       	moveq	#1,d0
+               S03:0000011A:  70 01
+F00:0312       	bra	.exit
+               S03:0000011C:  60 08
+F00:0313       .lower:	moveq	#-1,d0
+               S03:0000011E:  70 FF
+F00:0314       	bra	.exit
+               S03:00000120:  60 04
+F00:0315       .enter:	tst.b	(a0)
+               S03:00000122:  4A 10
+F00:0316       	bne	.loop
+               S03:00000124:  66 EE
+F00:0317       .exit:	unlk	a5
+               S03:00000126:  4E 5D
+F00:0318       	rts
+               S03:00000128:  4E 75
+F00:0319       
+F00:0320       ;---------------------------------------
+F00:0321       ;strncmp
+F00:0322       ;
+F00:0323       ;Compares at most the first n bytes of
+F00:0324       ;str1 and str2.
+F00:0325       ;
+F00:0326       ;Calling Convention:
+F00:0327       ;	move.l	#n,-(sp)
+F00:0328       ;	pea	str2
+F00:0329       ;	pea	str1
+F00:0330       ;	bsr	_strncmp
+F00:0331       ;	add.w	#12,sp
+F00:0332       ;
+F00:0333       ;RETUNRS:
+F00:0334       ;This function return values that are as follows −
+F00:0335       ;if Return value < 0 then it indicates str1 is less than str2.
+F00:0336       ;if Return value > 0 then it indicates str2 is less than str1.
+F00:0337       ;if Return value = 0 then it indicates str1 is equal to str2.
+F00:0338       ;---------------------------------------
+F00:0339       	public	_strncmp
+F00:0340       _strncmp:
+F00:0341       	link	a5,#0
+               S03:0000012A:  4E 55 00 00
+F00:0342       
+F00:0343       	move.l	(8,a5),a0	;str1
+               S03:0000012E:  20 6D 00 08
+F00:0344       	move.l	(12,a5),a1	;str2
+               S03:00000132:  22 6D 00 0C
+F00:0345       	move.l	(16,a5),d1	;n
+               S03:00000136:  22 2D 00 10
+F00:0346       	moveq	#0,d0
+               S03:0000013A:  70 00
+F00:0347       	bra	.enter
+               S03:0000013C:  60 12
+F00:0348       
+F00:0349       .loop:	cmp.b	(a0)+,(a1)+
+               S03:0000013E:  B3 08
+F00:0350       	beq	.enter
+               S03:00000140:  67 0E
+F00:0351       	bcs	.lower
+               S03:00000142:  65 04
+F00:0352       	moveq	#1,d0
+               S03:00000144:  70 01
+F00:0353       	bra	.exit
+               S03:00000146:  60 0C
+F00:0354       .lower:	moveq	#-1,d0
+               S03:00000148:  70 FF
+F00:0355       	bra	.exit
+               S03:0000014A:  60 08
+F00:0356       	tst.b	(a0)
+               S03:0000014C:  4A 10
+F00:0357       	beq	.exit
+               S03:0000014E:  67 04
+F00:0358       .enter:	dbra	d1,.loop
+               S03:00000150:  51 C9 FF EC
+F00:0359       .exit:	unlk	a5
+               S03:00000154:  4E 5D
+F00:0360       	rts
+               S03:00000156:  4E 75
+F00:0361       
+F00:0362       ;---------------------------------------
+F00:0363       ;strcpy
+F00:0364       ;
+F00:0365       ;Copies up to n characters from the
+F00:0366       ;string pointed to, by src to dest.
+F00:0367       ;
+F00:0368       ;Calling Convention
+F00:0369       ;char *strcpy(char *dest, const char *src)
+F00:0370       ;	pea	src
+F00:0371       ;	pea	dest
+F00:0372       ;	bsr	_strcpy
+F00:0373       ;	addq.w	#8,sp
+F00:0374       ;
+F00:0375       ;RETURN:
+F00:0376       ;This returns a pointer to the
+F00:0377       ;destination string dest.
+F00:0378       ;---------------------------------------
+F00:0379       	public	_strcpy
+F00:0380       _strcpy:
+F00:0381       	link	a5,#0
+               S03:00000158:  4E 55 00 00
+F00:0382       
+F00:0383       	move.l	(8,a5),a1	;dest
+               S03:0000015C:  22 6D 00 08
+F00:0384       	move.l	a1,d0
+               S03:00000160:  20 09
+F00:0385       	move.l	(12,a5),a0	;src
+               S03:00000162:  20 6D 00 0C
+F00:0386       .loop:	move.b	(a0)+,(a1)+
+               S03:00000166:  12 D8
+F00:0387       	bne	.loop
+               S03:00000168:  66 FC
+F00:0388       	unlk	a5
+               S03:0000016A:  4E 5D
+F00:0389       	rts
+               S03:0000016C:  4E 75
+F00:0390       
+F00:0391       ;---------------------------------------
+F00:0392       ;strncpy
+F00:0393       ;
+F00:0394       ;Copies up to n characters from the
+F00:0395       ;string pointed to, by src to dest.
+F00:0396       ;
+F00:0397       ;Calling Convention
+F00:0398       ;
+F00:0399       ;	move.l	#n,-(sp)
+F00:0400       ;	pea	src
+F00:0401       ;	pea	dest
+F00:0402       ;	bsr	_strncpy
+F00:0403       ;
+F00:0404       ;RETURNS:
+F00:0405       ;This function returns the final copy
+F00:0406       ;of the copied string.
+F00:0407       ;---------------------------------------
+F00:0408       	public	_strncpy
+F00:0409       _strncpy:
+F00:0410       	link	a5,#0
+               S03:0000016E:  4E 55 00 00
+F00:0411       
+F00:0412       	move.l	(8,a5),a1	;dest
+               S03:00000172:  22 6D 00 08
+F00:0413       	move.l	a1,d0
+               S03:00000176:  20 09
+F00:0414       	move.l	(12,a5),a0	;src
+               S03:00000178:  20 6D 00 0C
+F00:0415       	move.l	(16,a5),d1	;n
+               S03:0000017C:  22 2D 00 10
+F00:0416       	bra	.enter
+               S03:00000180:  60 08
+F00:0417       
+F00:0418       .loop:	move.b	(a0),(a1)+
+               S03:00000182:  12 D0
+F00:0419       	tst.b	(a0)
+               S03:00000184:  4A 10
+F00:0420       	beq	.enter
+               S03:00000186:  67 02
+F00:0421       	addq	#1,a0
+               S03:00000188:  52 48
+F00:0422       .enter:	dbra	d1,.loop
+               S03:0000018A:  51 C9 FF F6
+F00:0423       	move.l	(8,a5),d0
+               S03:0000018E:  20 2D 00 08
+F00:0424       	unlk	a5
+               S03:00000192:  4E 5D
+F00:0425       	rts
+               S03:00000194:  4E 75
+F00:0426       
+F00:0427       ;---------------------------------------
+F00:0428       ;strrchr
+F00:0429       ;
+F00:0430       ;Searches for the last occurrence of the
+F00:0431       ;character c (an unsigned char) in the
+F00:0432       ;string pointed to by the argument str.
+F00:0433       ;
+F00:0434       ;Calling Convention:
+F00:0435       ;	move.l	#c,-(sp)
+F00:0436       ;	pea	str
+F00:0437       ;	bsr	_strrchr
+F00:0438       ;	addq.w	#8,sp
+F00:0439       ;
+F00:0440       ;RETURNS:
+F00:0441       ;This function returns a pointer to the
+F00:0442       ;last occurrence of character in str.
+F00:0443       ;If the value is not found, the function
+F00:0444       ;returns a null pointer.
+F00:0445       ;---------------------------------------
+F00:0446       	public	_strrchr
+F00:0447       _strrchr:
+F00:0448       	link	a5,#0
+               S03:00000196:  4E 55 00 00
+F00:0449       	move.l	(8,a5),a0
+               S03:0000019A:  20 6D 00 08
+F00:0450       	move.l	(12,a5),d1
+               S03:0000019E:  22 2D 00 0C
+F00:0451       	moveq	#0,d0
+               S03:000001A2:  70 00
+F00:0452       .loop:	tst.b	(a0)
+               S03:000001A4:  4A 10
+F00:0453       	beq	.exit
+               S03:000001A6:  67 0A
+F00:0454       	cmp.b	(a0)+,d1
+               S03:000001A8:  B2 18
+F00:0455       	bne	.loop
+               S03:000001AA:  66 F8
+F00:0456       	move.l	a0,d0
+               S03:000001AC:  20 08
+F00:0457       	subq	#1,d0
+               S03:000001AE:  53 40
+F00:0458       	bra	.loop
+               S03:000001B0:  60 F2
+F00:0459       .exit:	unlk	a5
+               S03:000001B2:  4E 5D
+F00:0460       	rts
+               S03:000001B4:  4E 75
+F00:0461       
+F00:0462       ;---------------------------------------
+F00:0463       ;strtok
+F00:0464       ;
+F00:0465       ;Breaks string str into a series of
+F00:0466       ;tokens separated by delim.
+F00:0467       ;
+F00:0468       ;If yoy want a new string to parse,
+F00:0469       ;pass a new string, else pass NULL
+F00:0470       ;
+F00:0471       ;NOTE: this method is distructive.
+F00:0472       ;please have the string in ram when
+F00:0473       ;using this.
+F00:0474       ;
+F00:0475       ;Calling Convention:
+F00:0476       ;	pea	delim
+F00:0477       ;	pea	str -or- 0
+F00:0478       ;	bsr	_strtok
+F00:0479       ;	addq.w	#8,sp
+F00:0480       ;
+F00:0481       ;RETUNRS:
+F00:0482       ;This function returns a pointer to the
+F00:0483       ;first token found in the string. A null
+F00:0484       ;pointer is returned if there are no
+F00:0485       ;tokens left to retrieve.
+F00:0486       ;---------------------------------------
+F00:0487       	public	_strtok
+F00:0488       _strtok:
+F00:0489       	link	a5,#0
+               S03:000001B6:  4E 55 00 00
+F00:0490       
+F00:0491       	move.l	(8,a5),a0
+               S03:000001BA:  20 6D 00 08
+F00:0492       	move.l	(12,a5),d1
+               S03:000001BE:  22 2D 00 0C
+F00:0493       	moveq	#0,d0
+               S03:000001C2:  70 00
+F00:0494       
+F00:0495       ;check that we have a new string.
+F00:0496       	cmp.l	#0,a0
+               S03:000001C4:  B0 FC 00 00
+F00:0497       	beq	.noNewString
+               S03:000001C8:  67 06
+F00:0498       	move.l	a0,strtokPtr
+               S03:000001CA:  23 C8 00 00 00 00 [R]
+F00:0499       .noNewString:
+F00:0500       
+F00:0501       ;load from previous string
+F00:0502       	move.l	strtokPtr,a0
+               S03:000001D0:  20 79 00 00 00 00 [R]
+F00:0503       .loop:	tst.b	(a0)
+               S03:000001D6:  4A 10
+F00:0504       	beq	.exit
+               S03:000001D8:  67 10
+F00:0505       	cmp.b	(a0)+,d1
+               S03:000001DA:  B2 18
+F00:0506       	bne	.loop
+               S03:000001DC:  66 F8
+F00:0507       	subq.l	#1,a0
+               S03:000001DE:  53 88
+F00:0508       	move.b	#0,(a0)+
+               S03:000001E0:  10 FC 00 00
+F00:0509       	move.l	strtokPtr,d0
+               S03:000001E4:  20 39 00 00 00 00 [R]
+F00:0510       .exit:	move.l	a0,strtokPtr
+               S03:000001EA:  23 C8 00 00 00 00 [R]
+F00:0511       	unlk	a5
+               S03:000001F0:  4E 5D
+F00:0512       	rts
+               S03:000001F2:  4E 75
+F00:0513       
+F00:0514       ;---------------------------------------
+F00:0515       ;Function Name
+F00:0516       ;
+F00:0517       ;Description
+F00:0518       ;
+F00:0519       ;Calling Convention
+F00:0520       ;
+F00:0521       ;---------------------------------------
+F00:0522       
+
+
+Sections:
+S01  BSS
+S02  DATA
+S03  CODE
+
+
+Sources:
+F00  string.asm
+
+
+Symbols:
+ _strtok .exit LAB (0x1ea) sec=CODE 
+ _strtok .loop LAB (0x1d6) sec=CODE 
+ _strtok .noNewString LAB (0x1d0) sec=CODE 
+_strtok LAB (0x1b6) UNUSED EXPORT sec=CODE 
+ _strrchr .exit LAB (0x1b2) sec=CODE 
+ _strrchr .loop LAB (0x1a4) sec=CODE 
+_strrchr LAB (0x196) UNUSED EXPORT sec=CODE 
+ _strncpy .loop LAB (0x182) sec=CODE 
+ _strncpy .enter LAB (0x18a) sec=CODE 
+_strncpy LAB (0x16e) UNUSED EXPORT sec=CODE 
+ _strcpy .loop LAB (0x166) sec=CODE 
+_strcpy LAB (0x158) UNUSED EXPORT sec=CODE 
+ _strncmp .exit LAB (0x154) sec=CODE 
+ _strncmp .lower LAB (0x148) sec=CODE 
+ _strncmp .loop LAB (0x13e) sec=CODE 
+ _strncmp .enter LAB (0x150) sec=CODE 
+_strncmp LAB (0x12a) UNUSED EXPORT sec=CODE 
+ _strcmp .exit LAB (0x126) sec=CODE 
+ _strcmp .lower LAB (0x11e) sec=CODE 
+ _strcmp .loop LAB (0x114) sec=CODE 
+ _strcmp .enter LAB (0x122) sec=CODE 
+_strcmp LAB (0x104) UNUSED EXPORT sec=CODE 
+ _strchr .exit LAB (0xfe) sec=CODE 
+ _strchr .loop LAB (0xf4) sec=CODE 
+ _strchr .enter LAB (0xf8) sec=CODE 
+_strchr LAB (0xe6) UNUSED EXPORT sec=CODE 
+ _strncat .loopB LAB (0xd6) sec=CODE 
+ _strncat .loopA LAB (0xd0) sec=CODE 
+ _strncat .exit LAB (0xe2) sec=CODE 
+_strncat LAB (0xba) UNUSED EXPORT sec=CODE 
+ _strcat .loopB LAB (0xb2) sec=CODE 
+ _strcat .loopA LAB (0xac) sec=CODE 
+_strcat LAB (0x9e) UNUSED EXPORT sec=CODE 
+ _strlen .loop LAB (0x94) sec=CODE 
+ _strlen .enter LAB (0x96) sec=CODE 
+_strlen LAB (0x88) UNUSED EXPORT sec=CODE 
+ _memset .loop LAB (0x7a) sec=CODE 
+ _memset .enter LAB (0x7c) sec=CODE 
+_memset LAB (0x68) UNUSED EXPORT sec=CODE 
+ _memcpy .loop LAB (0x5a) sec=CODE 
+ _memcpy .enter LAB (0x5c) sec=CODE 
+_memcpy LAB (0x48) UNUSED EXPORT sec=CODE 
+ _memcmp .exit LAB (0x44) sec=CODE 
+ _memcmp .loop LAB (0x3a) sec=CODE 
+ _memcmp .enter LAB (0x40) sec=CODE 
+_memcmp LAB (0x26) UNUSED EXPORT sec=CODE 
+ _memchr .exit LAB (0x22) sec=CODE 
+ _memchr .loop LAB (0x12) sec=CODE 
+ _memchr .enter LAB (0x1c) sec=CODE 
+_memchr LAB (0x0) UNUSED EXPORT sec=CODE 
+strtokPtr LAB (0x0) REF sec=BSS 
+_MOVEMBYTES EXPR(0=0x0) INTERNAL 
+ MOVEMSIZE EXPR(0=0x0) INTERNAL 
+_MOVEMREGS EXPR(0=0x0) INTERNAL 
+__LINE__ EXPR(522=0x20a) INTERNAL 
+__FO EXPR(0=0x0) INTERNAL 
+__RS EXPR(0=0x0) INTERNAL 
+REPTN EXPR(-1=0xffffffff) INTERNAL 
+__VASM EXPR(1=0x1) INTERNAL 
+__UNIXFS EXPR(0=0x0) INTERNAL 
+
+There have been no errors.
