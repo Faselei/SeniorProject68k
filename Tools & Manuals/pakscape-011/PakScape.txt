@@ -1,0 +1,108 @@
+**************************************************
+*** PakScape v0.11                             ***
+***                                            ***
+*** Author: Peter 'Riv' Engström               ***
+*** E-mail: riviera@earthling.net              ***
+*** Copyright (C) 1999-2000 by Peter Engström. ***
+*** All rights reserved.                       ***
+**************************************************
+
+
+PakScape is a PAK/PK3/VOL explorer/creator. Since PK3 files are really 
+ZIP files it can also be used as a ZIP explorer/creator.
+
+The PAK file formats supported are the formats used by games based on 
+the Quake and Quake2 engines, including (but not limited to) Quake, 
+Quake2, Half-Life, Soldier of Fortune and Daikatana.
+
+The VOL file format supported is the format used by the Starsiege and 
+Starsiege Tribes games- and only the uncompressed kind.
+
+
+Features
+--------
+* Multiple Document Interface
+* Explorer-like UI
+* Drag & drop (including to and from Explorer)
+* Import/export files and directories
+
+
+Bugs/Limitations
+----------------
+* When moving objects (files and directories) all of the original 
+  objects will be deleted unless you cancel the operation in a 
+  'Confirm Replace' dialog. Answering 'No' will only result in that 
+  the destination file is not overwritten- the file to be moved will 
+  still be deleted!
+* File type descriptions may be wrong for non-registered types unless 
+  you have used the file open/save dialog. I have no idea why.
+* If you decide to view a document (i.e. either double-click the document 
+  or choose 'Open' from the context menu) that is registered to open with 
+  PakScape the temporary file created will not be deleted when PakScape 
+  closes.
+
+
+Technical Information
+---------------------
+Maximum files in a PAK file: 4096
+Maximum path in a PAK file:  55 bytes
+
+Maximum files in a PK3 file: 65535
+Maximum path in a PK3 file:  65535 bytes
+
+
+Recommended System
+------------------
+* 686 300MHz
+* 32MB free memory
+
+Minimum System
+--------------
+* 586 200MHz
+* 8MB free memory
+
+
+Tips and Tricks
+---------------
+If you don't have a lot of free memory save the archive directly after 
+you've added a few files.
+
+If you don't have a fast processor use normal compression when saving 
+zip/pk3 archives. Maximum compression is a lot slower and normally 
+doesn't compress a whole lot more than normal compression.
+
+
+To Do
+-----
+* Re-write the entire application... ON ICE.
+* Cancel button for long archive operations
+* Support for more file formats
+* Help file
+* Installer
+
+
+Credits/Acknowledgements
+------------------------
+PakScape uses the zlib compression library, 
+Copyright (C) 1995-1998 Jean-loup Gailly and Mark Adler.
+
+
+Legal/Disclaimer
+----------------
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR 
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR 
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY 
+OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH 
+DAMAGE.
+
+You may distribute the software only if it is free of charge and 
+the original archive remains intact.
+
+All trademarks are property of their legal owners.

@@ -1,0 +1,36 @@
+v0.11, July 25 2000
+--------------------
+* Daikatana pak support.
+* Starsiege vol support (uncompressed).
+* Context menus.
+* Somewhat improved progress indicator.
+* Don't force lowercase names.
+* Only recompress file if previous compression level is lower than 
+  user's choice.
+* Separate pk3 and zip compression choices.
+* Drag archives to workspace area to open them.
+* File size column is now always updated when overwriting a file.
+* Fixed bug creating tree from zip file with weird directory 
+  structure.
+* Fixed bug when moving directories from a list view.
+* Fixed crash bug when saving an archive fails.
+* Fixed memory leak when saving pk3/zip files.
+* Don't check if file is already viewed when you want to view it 
+  again.
+* Order of files within directories is now preserved. Previously the 
+  order was reversed on load due to my not using doubly-linked lists. 
+  Sometimes the order of files within the directory structure is 
+  vital for the function of the file. Also, files you add to a 
+  directory will be added last rather than first.
+
+
+v0.08, April 17 2000
+--------------------
+* Progress indicator when saving archives.
+* Compression choice when saving pk3 files.
+* Re-enabled the overwrite prompt in the standard save dialog.
+
+
+v0.07, March 16 2000
+----------------------
+* First official release.
