@@ -1,0 +1,106 @@
+00001006 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 12/18/2021 8:05:03 PM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00000000                             7  
+00000000  =00000000                  8  VDP_SCROLL_32x32 equ 0
+00000000  =00000001                  9  VDP_SCROLL_32x64 equ 1
+00000000  =00000002                 10  VDP_SCROLL_64x32 equ 2
+00000000  =00000003                 11  VDP_SCROLL_64x64 equ 3
+00000000  =00000004                 12  VDP_SCROLL_128x32 equ 4
+00000000  =00000005                 13  VDP_SCROLL_32x128 equ 5
+00000000                            14  
+00001000                            15      ORG    $1000
+00001000                            16      
+00001000                            17  SetScrollingModeData:
+00001000= 00                        18      dc.b    $00 ;32x32
+00001001= 01                        19      dc.b    $01 ;32x64
+00001002= 10                        20      dc.b    $10 ;64x32
+00001003= 11                        21      dc.b    $11 ;64x64
+00001004= 30                        22      dc.b    $30 ;128x32
+00001005= 03                        23      dc.b    $03 ;32x128
+00001006                            24      
+00001006                            25  START:                  ; first instruction of program
+00001006                            26  
+00001006                            27  * Put program code here
+00001006                            28  
+00001006                            29  ;void SetScrollingMode(option)
+00001006  2F3C 00000000             30      move.l  #VDP_SCROLL_32x32,-(a7)
+0000100C  6100 005C                 31      bsr _SetScrollingMode
+00001010  7000                      32      moveq   #0,d0
+00001012  584F                      33      add.w   #4,a7
+00001014  4E71                      34      nop
+00001016                            35      
+00001016  2F3C 00000001             36      move.l  #VDP_SCROLL_32x64,-(a7)
+0000101C  6100 004C                 37      bsr _SetScrollingMode
+00001020  7000                      38      moveq   #0,d0
+00001022  584F                      39      add.w   #4,a7
+00001024  4E71                      40      nop
+00001026                            41      
+00001026  2F3C 00000002             42      move.l  #VDP_SCROLL_64x32,-(a7)
+0000102C  6100 003C                 43      bsr _SetScrollingMode
+00001030  7000                      44      moveq   #0,d0
+00001032  584F                      45      add.w   #4,a7
+00001034  4E71                      46      nop
+00001036                            47      
+00001036  2F3C 00000003             48      move.l  #VDP_SCROLL_64x64,-(a7)
+0000103C  6100 002C                 49      bsr _SetScrollingMode
+00001040  7000                      50      moveq   #0,d0
+00001042  584F                      51      add.w   #4,a7
+00001044  4E71                      52      nop
+00001046                            53      
+00001046  2F3C 00000004             54      move.l  #VDP_SCROLL_128x32,-(a7)
+0000104C  6100 001C                 55      bsr _SetScrollingMode
+00001050  7000                      56      moveq   #0,d0
+00001052  584F                      57      add.w   #4,a7
+00001054  4E71                      58      nop
+00001056                            59      
+00001056  2F3C 00000005             60      move.l  #VDP_SCROLL_32x128,-(a7)
+0000105C  6100 000C                 61      bsr _SetScrollingMode
+00001060  7000                      62      moveq   #0,d0
+00001062  584F                      63      add.w   #4,a7
+00001064  4E71                      64      nop
+00001066                            65      
+00001066  FFFF FFFF                 66      SIMHALT             ; halt simulator
+0000106A                            67      
+0000106A                            68  _SetScrollingMode:
+0000106A  4E55 0000                 69      link    a5,#0
+0000106E                            70      
+0000106E  202D 0008                 71      move.l  (8,a5),d0   ;input option
+00001072  41F8 1000                 72      lea SetScrollingModeData,a0
+00001076  43F9 00FF0000             73      lea shadowVdp_Size,a1
+0000107C  12B0 0000                 74      move.b  (a0,d0),(a1)
+00001080                            75      
+00001080  4E5D                      76      unlk    a5
+00001082  4E75                      77      rts
+00001084                            78  
+00001084                            79  * Put variables and constants here
+00FF0000                            80      org $00FF0000
+00FF0000                            81  shadowVdp_Size ds.b 1
+00FF0001                            82      ds.b 1
+00FF0002                            83      
+00FF0002                            84      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+SETSCROLLINGMODEDATA  1000
+SHADOWVDP_SIZE      FF0000
+START               1006
+VDP_SCROLL_128X32   4
+VDP_SCROLL_32X128   5
+VDP_SCROLL_32X32    0
+VDP_SCROLL_32X64    1
+VDP_SCROLL_64X32    2
+VDP_SCROLL_64X64    3
+_SETSCROLLINGMODE   106A

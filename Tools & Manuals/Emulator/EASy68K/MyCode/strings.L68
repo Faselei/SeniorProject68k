@@ -1,0 +1,191 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 12/29/2021 7:19:50 PM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00001000                             7      ORG    $1000
+00001000                             8  START:                  ; first instruction of program
+00001000                             9  
+00001000                            10  * Put program code here
+00001000                            11  
+00001000  4878 0020                 12      pea ' '
+00001004  4879 000010EA             13      pea Strings
+0000100A  6100 004E                 14      bsr _strtok
+0000100E  504F                      15      addq.w  #8,sp
+00001010                            16      
+00001010  4878 0020                 17      pea ' '
+00001014  4878 0000                 18      pea 0
+00001018  6100 0040                 19      bsr _strtok
+0000101C  504F                      20      addq.w  #8,sp
+0000101E                            21      
+0000101E  4878 0020                 22      pea ' '
+00001022  4878 0000                 23      pea 0
+00001026  6100 0032                 24      bsr _strtok
+0000102A  504F                      25      addq.w  #8,sp
+0000102C                            26      
+0000102C  4878 0020                 27      pea ' '
+00001030  4878 0000                 28      pea 0
+00001034  6100 0024                 29      bsr _strtok
+00001038  504F                      30      addq.w  #8,sp
+0000103A                            31      
+0000103A  4878 0020                 32      pea ' '
+0000103E  4878 0000                 33      pea 0
+00001042  6100 0016                 34      bsr _strtok
+00001046  504F                      35      addq.w  #8,sp
+00001048                            36      
+00001048  4878 0020                 37      pea ' '
+0000104C  4878 0000                 38      pea 0
+00001050  6100 0008                 39      bsr _strtok
+00001054  504F                      40      addq.w  #8,sp
+00001056                            41  
+00001056                            42  
+00001056  FFFF FFFF                 43      SIMHALT             ; halt simulator
+0000105A                            44  ;---------------------------------------
+0000105A                            45  ;_strtok
+0000105A                            46  ;
+0000105A                            47  ;breaks string str into a series of
+0000105A                            48  ;tokens using the delimiter delim.
+0000105A                            49  ;
+0000105A                            50  ;passing NULL (0) as the string continues
+0000105A                            51  ;from the last string passed to it.
+0000105A                            52  ;
+0000105A                            53  ;   pea delim
+0000105A                            54  ;   pea string
+0000105A                            55  ;   bsr _strtok
+0000105A                            56  ;   addq.w  #8,sp
+0000105A                            57  ;---------------------------------------
+0000105A                            58  ;a0 = string to process
+0000105A                            59  ;a1 = 
+0000105A                            60  ;d0 = delimiter
+0000105A                            61  ;d1 = 
+0000105A                            62  _strtok:
+0000105A  4E55 0000                 63      link    a5,#0
+0000105E                            64  
+0000105E                            65  ;check to see if there is a new input string.
+0000105E  4AAD 0008                 66      tst.l   (8,a5)
+00001062  6700 000A                 67      beq .noNewInput
+00001066  23ED 0008 00FF0000        68      move.l  (8,a5),strtokPtr
+0000106E                            69  .noNewInput:
+0000106E                            70  
+0000106E                            71  ;inputs
+0000106E  2079 00FF0000             72      move.l strtokPtr,a0
+00001074  202D 000C                 73      move.l  (12,a5),d0
+00001078                            74  
+00001078                            75  .loop:
+00001078  4A10                      76      tst.b   (a0)
+0000107A  6700 001C                 77      beq .endStr
+0000107E  B018                      78      cmp.b   (a0)+,d0
+00001080  66F6                      79      bne .loop
+00001082                            80      
+00001082                            81  ;found delim
+00001082  117C 0000 FFFF            82      move.b  #0,(-1,a0)
+00001088  2039 00FF0000             83      move.l  strtokPtr,d0
+0000108E  23C8 00FF0000             84      move.l  a0,strtokPtr
+00001094  6000 0004                 85      bra .exit
+00001098                            86   
+00001098                            87  .endStr:
+00001098  7000                      88      moveq   #0,d0
+0000109A                            89  .exit:
+0000109A  4E5D                      90      unlk    a5
+0000109C  4E75                      91      rts
+0000109E                            92  
+0000109E                            93  ;---------------------------------------
+0000109E                            94  ;_strchr
+0000109E                            95  ;Searches for the first occurrence of the
+0000109E                            96  ;character c (an unsigned char) in the
+0000109E                            97  ;string pointed to, by the argument str.
+0000109E                            98  ;
+0000109E                            99  ;   pea c
+0000109E                           100  ;   pea str
+0000109E                           101  ;   bsr _strchr
+0000109E                           102  ;   addq.w  #8,sp
+0000109E                           103  ;---------------------------------------
+0000109E                           104  _strchr:
+0000109E  4E55 0000                105      link    a5,#0
+000010A2                           106      
+000010A2  206D 0008                107      move.l  (8,a5),a0
+000010A6  202D 000C                108      move.l  (12,a5),d0
+000010AA                           109      
+000010AA                           110  .loop:
+000010AA  4A10                     111      tst.b   (a0)
+000010AC  6700 000E                112      beq .endOfString
+000010B0  B018                     113      cmp.b   (a0)+,d0
+000010B2  66F6                     114      bne .loop
+000010B4  5348                     115      subq    #1,a0
+000010B6  2008                     116      move.l  a0,d0
+000010B8  6000 0004                117      bra .exit
+000010BC                           118  .endOfString:
+000010BC  7000                     119      moveq   #0,d0
+000010BE                           120  .exit:
+000010BE  4E5D                     121      unlk    a5
+000010C0  4E75                     122      rts
+000010C2                           123      
+000010C2                           124  ;---------------------------------------
+000010C2                           125  ;_strrchr
+000010C2                           126  ;;Searches for the lst occurrence of the
+000010C2                           127  ;character c (an unsigned char) in the
+000010C2                           128  ;string pointed to, by the argument str.
+000010C2                           129  ;
+000010C2                           130  ;   pea c
+000010C2                           131  ;   pea str
+000010C2                           132  ;   bsr _strrchr
+000010C2                           133  ;   addq.w  #8,sp
+000010C2                           134  ;---------------------------------------
+000010C2                           135  _strrchr:
+000010C2  4E55 0000                136      link    a5,#0
+000010C6                           137      
+000010C6  206D 0008                138      move.l  (8,a5),a0
+000010CA  202D 000C                139      move.l  (12,a5),d0
+000010CE  227C 00000000            140      move.l  #0,a1
+000010D4                           141      
+000010D4                           142  .loop:
+000010D4  4A10                     143      tst.b   (a0)    ;end of string?
+000010D6  6700 000C                144      beq .exit   ;yes: exit
+000010DA  B018                     145      cmp.b   (a0)+,d0 ;no: target char?
+000010DC  66F6                     146      bne .loop  ;no: loop
+000010DE  2248                     147      move.l  a0,a1    ;yes: save previous address
+000010E0  5349                     148      subq    #1,a1
+000010E2  60F0                     149      bra .loop
+000010E4                           150  .exit:
+000010E4  2009                     151      move.l  a1,d0
+000010E6  4E5D                     152      unlk    a5
+000010E8  4E75                     153      rts
+000010EA                           154  
+000010EA                           155  Strings:
+000010EA= 48 65 6C 6C 6F 2C ...    156      dc.b    'Hello, this is a test string.',0
+00001108= 00                       157      dc.b    0
+00001109                           158  
+00001109                           159  * Put variables and constants here
+00FF0000                           160      org $00ff0000
+00FF0000                           161      
+00FF0000                           162  strtokPtr    ds.l    1
+00FF0004                           163  
+00FF0004                           164      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+START               1000
+STRINGS             10EA
+STRTOKPTR           FF0000
+_STRCHR             109E
+_STRCHR:ENDOFSTRING  10BC
+_STRCHR:EXIT        10BE
+_STRCHR:LOOP        10AA
+_STRRCHR            10C2
+_STRRCHR:EXIT       10E4
+_STRRCHR:LOOP       10D4
+_STRTOK             105A
+_STRTOK:ENDSTR      1098
+_STRTOK:EXIT        109A
+_STRTOK:LOOP        1078
+_STRTOK:NONEWINPUT  106E

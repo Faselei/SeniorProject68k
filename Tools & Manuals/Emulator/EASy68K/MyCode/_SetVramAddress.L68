@@ -1,0 +1,139 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 12/6/2021 4:36:38 PM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00001000                             7      ORG    $1000
+00001000                             8  START:                  ; first instruction of program
+00001000                             9  
+00001000                            10  ;VDP_SCROLL_A equ $C000
+00001000                            11  ;VDP_WINDOW equ $B000
+00001000                            12  ;VDP_SCROLL_B equ $E000
+00001000                            13  ;$5F sprite equ $BE00
+00001000                            14  ;$2E hscroll equ $B800
+00001000                            15  
+00001000  2F3C 0000C000             16      move.l  #$C000,-(a7)    ;shadowVdp_PlaneA
+00001006  2F3C 00000000             17      move.l  #0,-(a7)
+0000100C  6100 0078                 18      bsr _SetVramAddress
+00001010  7000                      19      moveq   #0,d0
+00001012  504F                      20      add.w   #8,a7
+00001014                            21      
+00001014  2F3C 0000E000             22      move.l  #$E000,-(a7)    ;shadowVdp_PlaneB
+0000101A  2F3C 00000001             23      move.l  #1,-(a7)
+00001020  6100 0064                 24      bsr _SetVramAddress
+00001024  7000                      25      moveq   #0,d0
+00001026  504F                      26      add.w   #8,a7
+00001028                            27      
+00001028  2F3C 0000B000             28      move.l  #$B000,-(a7)    ;shadowVdp_Window
+0000102E  2F3C 00000002             29      move.l  #2,-(a7)
+00001034  6100 0050                 30      bsr _SetVramAddress
+00001038  7000                      31      moveq   #0,d0
+0000103A  504F                      32      add.w   #8,a7
+0000103C                            33      
+0000103C  2F3C 0000BE00             34      move.l  #$BE00,-(a7)    ;shadowVdp_Sprite
+00001042  2F3C 00000003             35      move.l  #3,-(a7)
+00001048  6100 003C                 36      bsr _SetVramAddress
+0000104C  7000                      37      moveq   #0,d0
+0000104E  504F                      38      add.w   #8,a7
+00001050                            39      
+00001050  2F3C 0000B800             40      move.l  #$B800,-(a7)    ;shadowVdp_HScroll
+00001056  2F3C 00000004             41      move.l  #4,-(a7)
+0000105C  6100 0028                 42      bsr _SetVramAddress
+00001060  7000                      43      moveq   #0,d0
+00001062  504F                      44      add.w   #8,a7
+00001064                            45  
+00001064                            46  * Put program code here
+00001064  FFFF FFFF                 47      SIMHALT             ; halt simulator
+00001068                            48      
+00001068                            49      
+00001068                            50  VramAddressFilterTable:
+00001068= 02                        51      dc.b    $02 ;additional number of shifts    ;PlaneA
+00001069= 34                        52      dc.b    $34 ;input is bitwise AND with this ;
+0000106A                            53      
+0000106A= 05                        54      dc.b    $05 ;PlaneB
+0000106B= 07                        55      dc.b    $07
+0000106C                            56      
+0000106C= 02                        57      dc.b    $02 ;Window
+0000106D= 3E                        58      dc.b    $3E
+0000106E                            59      
+0000106E= 01                        60      dc.b    $01 ;Sprite
+0000106F= 7F                        61      dc.b    $7f
+00001070                            62      
+00001070= 02                        63      dc.b    $02 ;HScroll
+00001071= 3F                        64      dc.b    $3f
+00001072                            65  
+00001072                            66  VramAddressVariableTable:
+00001072= 00FF0000                  67      dc.l    shadowVdp_PlaneA
+00001076= 00FF0001                  68      dc.l    shadowVdp_PlaneB
+0000107A= 00FF0002                  69      dc.l    shadowVdp_Window
+0000107E= 00FF0003                  70      dc.l    shadowVdp_Sprite
+00001082= 00FF0004                  71      dc.l    shadowVdp_HScroll
+00001086                            72  
+00001086                            73      
+00001086                            74  ;---------------------------------------
+00001086                            75  ;
+00001086                            76  ;void SetVramAddress(command. address)
+00001086                            77  ;   move.l  #address,-(a7)
+00001086                            78  ;   move.l  #command,-(a7)
+00001086                            79  ;   bsr _SetVramAddress
+00001086                            80  ;   add.w   #4,a7
+00001086                            81  ;---------------------------------------
+00001086                            82  ;d0 = index
+00001086                            83  ;d1 = scratch value
+00001086                            84  ;a0 = address of AND & shifts table
+00001086                            85  ;a1 = address of ram we are modifying
+00001086                            86  
+00001086                            87  _SetVramAddress:
+00001086  4E55 0000                 88      link    a5,#0
+0000108A  202D 0008                 89      move.l  (8,a5),d0   ;command
+0000108E  222D 000C                 90      move.l  (12,a5),d1  ;address
+00001092                            91  
+00001092                            92  ;find out what byte we are about to modify, and the logic and Bit shifts to go with it
+00001092  41F8 1068                 93      lea VramAddressFilterTable,a0
+00001096  43F8 1072                 94      lea VramAddressVariableTable,a1   
+0000109A  E508                      95      lsl.b   #2,d0
+0000109C  2271 0000                 96      move.l  (a1,d0),a1
+000010A0  E208                      97      lsr.b   #1,d0
+000010A2  41F0 0000                 98      lea  (a0,d0),a0
+000010A6                            99      
+000010A6                           100  ;start by shifting the high 8 bytes to the lower 8
+000010A6  E089                     101      lsr.l   #8,d1
+000010A8  1018                     102      move.b  (a0)+,d0    ;can't do the next instruction in 1 step
+000010AA  E0A9                     103      lsr.l   d0,d1       ;shift the extra amount
+000010AC  C218                     104      and.b   (a0)+,d1    ;bitwise and with this
+000010AE  1281                     105      move.b  d1,(a1)     ;store result
+000010B0  4E5D                     106      unlk    a5
+000010B2  4E75                     107      rts
+000010B4                           108  
+000010B4                           109  * Put variables and constants here
+00FF0000                           110      org $00FF0000
+00FF0000                           111  
+00FF0000                           112  shadowVdp_PlaneA    ds.b    1
+00FF0001                           113  shadowVdp_PlaneB    ds.b    1
+00FF0002                           114  shadowVdp_Window    ds.b    1
+00FF0003                           115  shadowVdp_Sprite    ds.b    1
+00FF0004                           116  shadowVdp_HScroll   ds.b    1
+00FF0005                           117  
+00FF0005                           118      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+SHADOWVDP_HSCROLL   FF0004
+SHADOWVDP_PLANEA    FF0000
+SHADOWVDP_PLANEB    FF0001
+SHADOWVDP_SPRITE    FF0003
+SHADOWVDP_WINDOW    FF0002
+START               1000
+VRAMADDRESSFILTERTABLE  1068
+VRAMADDRESSVARIABLETABLE  1072
+_SETVRAMADDRESS     1086

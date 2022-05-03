@@ -1,0 +1,219 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 1/2/2022 11:09:07 AM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00001000                             7      ORG    $1000
+00001000                             8      
+00001000                             9  START:                  ; first instruction of program
+00001000                            10  
+00001000                            11  * Put program code here
+00001000  4E55 FFF4                 12      link    a5,#-12
+00001004                            13      
+00001004                            14      ;00 - 03: 32 bit position in rom (static)
+00001004                            15      ;04 - 07: 32 bit position from start of file (dynamic)
+00001004                            16      ;08 - 11: 32 bit size (size)
+00001004                            17  
+00001004  4879 000010E2             18      pea File_LEVEL00BIN
+0000100A  2F0D                      19      move.l  a5,-(sp)
+0000100C  6100 008A                 20      bsr _fopen
+00001010  504F                      21      addq.w  #8,sp
+00001012                            22  
+00001012                            23  
+00001012  4E5D                      24      unlk    a5
+00001014  FFFF FFFF                 25      SIMHALT             ; halt simulator    
+00001018                            26      
+00001018                            27  ;---------------------------------------
+00001018                            28  ;_strtok
+00001018                            29  ;
+00001018                            30  ;breaks string str into a series of
+00001018                            31  ;tokens using the delimiter delim.
+00001018                            32  ;
+00001018                            33  ;passing NULL (0) as the string continues
+00001018                            34  ;from the last string passed to it.
+00001018                            35  ;
+00001018                            36  ;   pea delim
+00001018                            37  ;   pea string
+00001018                            38  ;   bsr _strtok
+00001018                            39  ;   addq.w  #8,sp
+00001018                            40  ;---------------------------------------
+00001018                            41  ;a0 = string to process
+00001018                            42  ;a1 = 
+00001018                            43  ;d0 = delimiter
+00001018                            44  ;d1 = 
+00001018                            45  _strtok:
+00001018  4E55 0000                 46      link    a5,#0
+0000101C                            47  
+0000101C                            48  ;check to see if there is a new input string.
+0000101C  4AAD 0008                 49      tst.l   (8,a5)
+00001020  6700 000A                 50      beq .noNewInput
+00001024  23ED 0008 00FF0000        51      move.l  (8,a5),strtokPtr
+0000102C                            52  .noNewInput:
+0000102C                            53  
+0000102C                            54  ;inputs
+0000102C  2079 00FF0000             55      move.l strtokPtr,a0
+00001032  202D 000C                 56      move.l  (12,a5),d0
+00001036                            57  
+00001036                            58  .loop:
+00001036  4A10                      59      tst.b   (a0)
+00001038  6700 001C                 60      beq .endStr
+0000103C  B018                      61      cmp.b   (a0)+,d0
+0000103E  66F6                      62      bne .loop
+00001040                            63      
+00001040                            64  ;found delim
+00001040  117C 0000 FFFF            65      move.b  #0,(-1,a0)
+00001046  2039 00FF0000             66      move.l  strtokPtr,d0
+0000104C  23C8 00FF0000             67      move.l  a0,strtokPtr
+00001052  6000 0004                 68      bra .exit
+00001056                            69   
+00001056                            70  .endStr:
+00001056  7000                      71      moveq   #0,d0
+00001058                            72  .exit:
+00001058  4E5D                      73      unlk    a5
+0000105A  4E75                      74      rts
+0000105C                            75  
+0000105C                            76  ;---------------------------------------
+0000105C                            77  ; finds the length of a zero terminated
+0000105C                            78  ; string
+0000105C                            79  ;
+0000105C                            80  ;   pea string
+0000105C                            81  ;   bsr _strlen
+0000105C                            82  ;   addq.w  #4,sp
+0000105C                            83  ;---------------------------------------
+0000105C                            84  _strlen:
+0000105C  4E55 0000                 85      link    a5,#0
+00001060                            86      
+00001060                            87  ;load the string
+00001060  206D 0008                 88      move.l  (8,a5),a0
+00001064  7000                      89      moveq   #0,d0
+00001066                            90  .loop:
+00001066  4A18                      91      tst.b   (a0)+
+00001068  6700 0006                 92      beq .exit
+0000106C  5280                      93      addq.l  #1,d0
+0000106E  60F6                      94      bra .loop
+00001070                            95  .exit:
+00001070  4E5D                      96      unlk    a5
+00001072  4E75                      97      rts
+00001074                            98      
+00001074                            99  ;---------------------------------------
+00001074                           100  ;   copy string 1 to string 2
+00001074                           101  ;
+00001074                           102  ;   pea string 1
+00001074                           103  ;   pea string 2
+00001074                           104  ;   bsr _strcpy
+00001074                           105  ;   addq.w  #8,sp
+00001074                           106  ;---------------------------------------
+00001074                           107  _strcpy:
+00001074  4E55 0000                108      link    a5,#0
+00001078                           109      
+00001078  48E7 0030                110      movem.l   a2-a3,-(sp)
+0000107C                           111      
+0000107C  266D 0008                112      move.l  (8,a5),a3
+00001080  246D 000C                113      move.l  (12,a5),a2
+00001084                           114      
+00001084                           115  ;find out the length of the string
+00001084  2F0A                     116      move.l  a2,-(sp)
+00001086  61D4                     117      bsr _strlen
+00001088  584F                     118      addq.w  #4,sp
+0000108A                           119  .loop:
+0000108A  16DA                     120      move.b  (a2)+,(a3)+
+0000108C  51C8 FFFC                121      dbra    d0,.loop
+00001090                           122      
+00001090  4CDF 0C00                123      movem.l   (sp)+,a2-a3
+00001094  4E5D                     124      unlk    a5
+00001096  4E75                     125      rts
+00001098                           126  
+00001098                           127  ;---------------------------------------
+00001098                           128  ; c style fopen, must be in 8.3 string
+00001098                           129  ; format. "12345678.9AB".
+00001098                           130  ;
+00001098                           131  ;   
+00001098                           132  ;   pea addressOfString
+00001098                           133  ;   pea locationOfFileStruct
+00001098                           134  ;   bsr _fopen
+00001098                           135  ;   addq.b  #8,sp
+00001098                           136  ;---------------------------------------
+00001098                           137  _fopen:
+00001098  4E55 FFF4                138      link    a5,#-12
+0000109C                           139      
+0000109C  48E7 2038                140      movem.l  d2/a2-a4,-(sp)
+000010A0                           141      
+000010A0  286D 0008                142      move.l  (8,a5),a4   ;location of file struct
+000010A4  246D 000C                143      move.l  (12,a5),a2  ;pointer to string
+000010A8                           144  
+000010A8                           145  ;call _strtok and parse the string
+000010A8  4878 002E                146      pea '.'
+000010AC  2F0A                     147      move.l  a2,-(sp)
+000010AE  6100 FF68                148      bsr _strtok
+000010B2  504F                     149      addq.w  #8,sp
+000010B4                           150      
+000010B4                           151  ;find the length of the token
+000010B4  2F00                     152      move.l   d0,-(sp)
+000010B6  61A4                     153      bsr _strlen
+000010B8  584F                     154      addq.w  #4,sp
+000010BA  2400                     155      move.l  d0,d2
+000010BC                           156  
+000010BC                           157  ;if the string length is greater then 8, then this is not a valid file name
+000010BC  B43C 0008                158      cmp.b #8,d2
+000010C0  6300 0010                159      bls .stringOk
+000010C4  13FC 0001 00FF0004       160      move.b #1,(_errno)
+000010CC  7000                     161      moveq   #0,d0
+000010CE  6000 000A                162      bra .exit
+000010D2                           163  .stringOk:
+000010D2                           164  
+000010D2  2F0A                     165      move.l  a2,-(sp)
+000010D4  2F0D                     166      move.l  a5,-(sp)
+000010D6  619C                     167      bsr _strcpy
+000010D8  504F                     168      addq.w  #8,sp
+000010DA                           169  
+000010DA                           170  .exit:
+000010DA  4CDF 1C04                171      movem.l   (sp)+,d2/a2-a4
+000010DE  4E5D                     172      unlk    a5
+000010E0  4E75                     173      rts
+000010E2                           174  
+000010E2                           175  * Put variables and constants here
+000010E2                           176  
+000010E2                           177  File_LEVEL00BIN:
+000010E2= 4C 45 56 45 4C 30 ...    178      dc.b    'LEVEL00.BIN',0
+000010EE                           179  
+000010EE                           180  pak0dat:
+000010EE= 4C 45 56 45 4C 30 ...    181      dc.b    76,69,86,69,76,48,48,32,66,73,78,0,0,0,0,41,73,32,106,117,115,116,32,110,101,101,100,32,115,111,109,116,104,105,110,103,32,116,111,32,112,117,116,32,104,101,114,101,32,105,110,32,99,97,115,101,46,0,84,73,84,76,69,71,70,88,66,73,78,0,0,
+00001138= 54 49 54 4C 45 47 ...    182      dc.b    84,73,84,76,69,71,70,88,46,66,73,78,32,116,104,105,115,32,110,101,101,100,115,32,116,111,32,98,101,32,97,110,32,111,100,100,32,110,117,109,98,101,114,32,111,102,32,99,104,97,114,97,99,116,101,114,115,46,32,0,83,116,111,114,121,32,32,32
+0000117D= 78 74 00 00 00 00 ...    183      dc.b    120,116,0,0,0,0,74,79,107,32,105,116,32,105,115,32,50,48,58,52,57,32,111,110,32,106,97,110,32,49,39,115,116,32,50,48,50,50,44,32,106,117,115,116,32,119,114,105,116,105,110,103,32,116,104,105,115,32,110,111,119,32,116,111,32,116,101,115
+000011C3= 6D 61 6B 65 50 61 ...    184      dc.b    109,97,107,101,80,97,107,46,101,120,101,0,0
+000011D0                           185      
+00FF0000                           186      org $00FF0000
+00FF0000                           187  strtokPtr   ds.l    1
+00FF0004                           188  _errno  ds.b    1
+00FF0005                           189      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+FILE_LEVEL00BIN     10E2
+PAK0DAT             10EE
+START               1000
+STRTOKPTR           FF0000
+_ERRNO              FF0004
+_FOPEN              1098
+_FOPEN:EXIT         10DA
+_FOPEN:STRINGOK     10D2
+_STRCPY             1074
+_STRCPY:LOOP        108A
+_STRLEN             105C
+_STRLEN:EXIT        1070
+_STRLEN:LOOP        1066
+_STRTOK             1018
+_STRTOK:ENDSTR      1056
+_STRTOK:EXIT        1058
+_STRTOK:LOOP        1036
+_STRTOK:NONEWINPUT  102C
