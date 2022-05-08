@@ -1,0 +1,25 @@
+MEMORY {
+ rom (rx) : ORIGIN = 0x00000000, LENGTH = 0x001ffff
+ ram (rwx) : ORIGIN = 0x00FF0000, LENGTH = 0x000007fff
+ heap (rwx) : ORIGIN = 0x00FF8000, LENGTH = 0x000006fff
+ stack (rwx) : ORIGIN = 0x00FFF000, LENGTH = 0x000000FF0
+}
+
+SECTIONS {
+
+ .header : { *(HEADER) } > rom
+
+ .code : { *(CODE) } > rom
+
+ .data : {
+ *(DATA) 
+
+  FILL16(0x4E71);
+  . = ORIGIN(rom) + LENGTH(rom) - 1;
+  BYTE(0x00);
+} > rom
+
+ .bss (NOLOAD): { *(BSS) } > ram
+ .heap (NOLOAD): { *(HEAP) } > heap
+ .stack (NOLOAD): { *(STACK)} > stack
+}
